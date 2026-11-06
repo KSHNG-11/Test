@@ -2,9 +2,33 @@
 
 ## Frenchcore Academy
 
-`frenchcore-academy/index.html` is a self-contained, Duolingo-style course for learning
-FL Studio and frenchcore production, written in English. Open the file in any modern
-browser; no install or build step is needed. Progress is saved in the browser's local storage.
+`frenchcore-academy/` is a Duolingo-style course for learning FL Studio and frenchcore
+production, written in English. It is an installable web app (PWA): once installed it opens
+from your home screen like a normal app and works offline. Progress is saved on the device.
+
+### Install it
+
+The app must be served over https (or `localhost`) to install; opening `index.html` as a
+local file works for using it, but not for installing it.
+
+- **Host it**: with GitHub Pages enabled on this repository, the app lives at
+  `https://<user>.github.io/<repo>/frenchcore-academy/`. Any static host works; there is no build step.
+- **Android / Chrome / Edge (desktop)**: open that address, then tap **Install** in the app's
+  Settings section (or the browser's *Install app* menu entry).
+- **iPhone / iPad**: open the address in Safari, tap **Share**, then **Add to Home Screen**.
+- **Try it locally**: `python3 -m http.server` from the repository root, then open
+  `http://localhost:8000/frenchcore-academy/`.
+
+When you change any app file, bump `VERSION` in `frenchcore-academy/sw.js` so installed
+copies download the update.
+
+### Files
+
+- `index.html`: the whole app (lessons, audio engine, interface).
+- `manifest.webmanifest`, `sw.js`: installability and offline cache.
+- `icons/`: app icons (SVG sources and PNG exports, including a maskable icon).
+- `fonts/`: self-hosted fonts (Big Shoulders Display, Atkinson Hyperlegible, JetBrains Mono;
+  all under the SIL Open Font License 1.1) so the app looks right offline.
 
 What's inside:
 
