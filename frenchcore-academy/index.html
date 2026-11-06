@@ -1,0 +1,1393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Frenchcore Academy</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one centred column (max 680px). The Learn tab is a vertical "setlist" path of lesson pads;
+   a lesson opens as a full-screen deck with a progress fader on top and a check bar at the bottom.
+   Deliberately dark-only: it lives next to FL Studio at 2 a.m. Tricolour blue/red accents nod to the genre's French roots. */
+:root{
+  --bg:#12101b;
+  --surface:#1c1929;
+  --surface-2:#262238;
+  --line:#3a3452;
+  --fg:#f4f1fb;
+  --muted:#a59fbc;
+  --blue:#5b82ff;
+  --red:#ff4d63;
+  --amber:#ffb84d;
+  --good:#3fdc9a;
+  --good-bg:#14352a;
+  --bad-bg:#3a1520;
+  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:14px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--fg)}
+body{margin:0;font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+a{color:var(--blue)}
+.wrap{max-width:680px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{text-wrap:balance}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;flex-direction:column;gap:8px;padding-block:10px 0}
+.brandrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:900;font-size:26px;letter-spacing:.02em;text-transform:uppercase;line-height:1;display:flex;align-items:center;gap:8px}
+.brand .flag{display:inline-flex;height:18px;width:24px;border-radius:3px;overflow:hidden}
+.brand .flag i{flex:1}
+.stats{display:flex;gap:6px;flex-wrap:wrap}
+.stat{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;background:var(--surface);border:1px solid var(--line);font-family:var(--mono);font-size:13px;font-weight:700}
+.stat svg{width:16px;height:16px}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:none;border:0;padding:8px 12px 10px;font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--fg);border-color:var(--red)}
+
+main{padding-block:20px 80px}
+.view[hidden]{display:none}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
+.lead{color:var(--muted);max-width:62ch;margin:6px 0 0}
+
+/* ---------- today card ---------- */
+.today{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:26px}
+.ring{width:58px;height:58px}
+.today h2{margin:0;font-family:var(--display);font-size:24px;text-transform:uppercase;letter-spacing:.03em;line-height:1.05}
+.today p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.btn{border:0;border-radius:12px;padding:11px 18px;font-weight:700;background:var(--surface-2);border-bottom:3px solid #14111f;transition:transform .05s}
+.btn:active{transform:translateY(2px);border-bottom-width:1px}
+.btn.primary{background:var(--blue);color:#0b0f25;border-bottom-color:#2f4fc4}
+.btn.red{background:var(--red);color:#2a0710;border-bottom-color:#b8283c}
+.btn.good{background:var(--good);color:#06291b;border-bottom-color:#22a170}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.small{padding:7px 12px;font-size:14px;border-radius:10px}
+
+/* ---------- path ---------- */
+.unit{margin-bottom:34px}
+.unit-head{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--uc)}
+.unit-head .num{font-family:var(--display);font-weight:900;font-size:40px;line-height:.9;color:var(--uc);min-width:34px}
+.unit-head h3{margin:0;font-family:var(--display);font-size:24px;letter-spacing:.03em;text-transform:uppercase;line-height:1.05}
+.unit-head p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.nodes{display:flex;flex-direction:column;align-items:center;gap:18px;padding-top:22px}
+.node{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;padding:0;transform:translateX(var(--dx,0))}
+.pad{width:74px;height:70px;border-radius:50%;display:grid;place-items:center;background:var(--uc);border-bottom:7px solid color-mix(in srgb,var(--uc) 55%,#000);color:#0d0b14;transition:transform .06s}
+.node:active .pad{transform:translateY(3px)}
+.pad svg{width:30px;height:30px}
+.node.locked .pad{background:var(--surface-2);border-bottom-color:#15121f;color:var(--muted)}
+.node.current .pad{box-shadow:0 0 0 5px var(--bg),0 0 0 9px color-mix(in srgb,var(--uc) 60%,transparent);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 5px var(--bg),0 0 0 13px color-mix(in srgb,var(--uc) 25%,transparent)}}
+.node .lbl{font-size:13px;font-weight:700;max-width:170px;text-align:center;line-height:1.25}
+.node.locked .lbl{color:var(--muted)}
+.node .stars{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.1em;min-height:14px}
+
+.settings{margin-top:40px;border-top:1px solid var(--line);padding-top:20px;display:grid;gap:12px}
+.settings h3{margin:0;font-family:var(--display);text-transform:uppercase;letter-spacing:.04em;font-size:20px}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:15px}
+.setrow select,.setrow input[type=range]{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--surface-2);border:1px solid var(--line);padding:10px 16px;border-radius:12px;z-index:60;font-size:14px;max-width:calc(100% - 32px)}
+
+/* ---------- lesson overlay ---------- */
+.lesson{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column}
+.ls-top{padding-top:calc(12px + env(safe-area-inset-top,0px))}
+.ls-top .wrap{display:flex;align-items:center;gap:14px}
+.x{background:none;border:0;padding:6px;color:var(--muted);display:grid;place-items:center}
+.x svg{width:24px;height:24px}
+.bar{flex:1;height:16px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--good);border-radius:99px;transition:width .35s ease;box-shadow:inset 0 -4px 0 rgba(0,0,0,.15)}
+.ls-body{flex:1;overflow-y:auto;padding-block:22px 30px}
+.kind{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--uc,var(--blue));margin:0 0 6px}
+.q{font-size:22px;line-height:1.3;margin:0 0 18px;font-weight:700}
+.learn h2{font-family:var(--display);font-size:34px;text-transform:uppercase;letter-spacing:.02em;line-height:1;margin:0 0 14px}
+.learn .txt{max-width:62ch}
+.learn .txt p{margin:0 0 12px}
+.learn .txt ul{margin:0 0 12px;padding-left:20px}
+.learn .txt li{margin-bottom:4px}
+kbd{font-family:var(--mono);font-size:.85em;background:var(--surface-2);border:1px solid var(--line);border-bottom-width:3px;border-radius:6px;padding:1px 6px;white-space:nowrap}
+.note{border-left:3px solid var(--amber);background:var(--surface);padding:10px 12px;border-radius:0 10px 10px 0;font-size:14px;color:var(--muted);margin:0 0 12px}
+.demos{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.opts{display:grid;gap:10px}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;background:var(--surface);border:2px solid var(--line);border-bottom-width:4px;border-radius:12px;padding:12px 14px;font-size:16px}
+.opt .key{font-family:var(--mono);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:0 6px;flex:none}
+.opt.sel{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 14%,var(--surface))}
+.opt.right{border-color:var(--good);background:var(--good-bg)}
+.opt.wrong{border-color:var(--red);background:var(--bad-bg)}
+.tfgrid{grid-template-columns:1fr 1fr}
+.tfgrid .opt{justify-content:center;font-weight:700;font-size:18px;padding:18px}
+.numrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.numrow input{width:180px;max-width:100%;background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:12px 14px;font-family:var(--mono);font-size:22px}
+.numrow input:focus{border-color:var(--blue);outline:none}
+.numrow .unit{font-family:var(--mono);color:var(--muted);font-size:18px}
+.zone{min-height:64px;border:2px dashed var(--line);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.zone:empty::before{content:"Tap the steps below in the right order";color:var(--muted);font-size:14px;padding:12px 6px}
+.pool{display:flex;flex-direction:column;gap:8px}
+.chip{text-align:left;background:var(--surface);border:2px solid var(--line);border-bottom-width:4px;border-radius:10px;padding:10px 12px;font-size:15px;display:flex;gap:10px;align-items:baseline}
+.chip .n{font-family:var(--mono);color:var(--blue);font-size:13px;min-width:18px}
+.chip.ghost{visibility:hidden}
+.matchgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.matchgrid .col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.mitem{background:var(--surface);border:2px solid var(--line);border-bottom-width:4px;border-radius:10px;padding:10px;font-size:14px;text-align:center;min-height:52px;overflow-wrap:anywhere}
+.mitem.sel{border-color:var(--blue)}
+.mitem.done{border-color:var(--good);background:var(--good-bg);color:var(--muted);cursor:default}
+.mitem.shake{animation:shake .3s;border-color:var(--red)}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.lcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.lcard{background:var(--surface);border:2px solid var(--line);border-bottom-width:4px;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.lcard.sel{border-color:var(--blue)}
+.lcard.right{border-color:var(--good);background:var(--good-bg)}
+.lcard.wrong{border-color:var(--red);background:var(--bad-bg)}
+.play{width:64px;height:64px;border-radius:50%;border:0;background:var(--blue);color:#0b0f25;display:grid;place-items:center;border-bottom:5px solid #2f4fc4}
+.play svg{width:26px;height:26px}
+.pick{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-weight:700;font-size:14px}
+.lcard.sel .pick{background:var(--blue);color:#0b0f25;border-color:var(--blue)}
+
+/* step grid */
+.seqwrap{overflow-x:auto;padding-bottom:6px}
+.seq{display:grid;gap:6px;min-width:340px}
+.seqrow{display:grid;grid-template-columns:48px repeat(16,1fr);gap:3px;align-items:center}
+.seqrow .rl{font-family:var(--mono);font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.06em}
+.cell{aspect-ratio:1/1.25;border-radius:5px;border:0;background:var(--surface-2);padding:0;border-bottom:3px solid #15121f}
+.cell.alt{background:#2e2944}
+.cell.on{background:var(--rc,var(--red));border-bottom-color:color-mix(in srgb,var(--rc,var(--red)) 55%,#000)}
+.cell.ph{outline:2px solid var(--fg);outline-offset:-2px}
+.cell:disabled{cursor:not-allowed;opacity:.8}
+.seqnums{display:grid;grid-template-columns:48px repeat(16,1fr);gap:3px;font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center}
+.seqctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0 0}
+
+.ls-foot{border-top:2px solid var(--line);padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));padding-top:14px;background:var(--bg)}
+.ls-foot .wrap{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.ls-foot.good{background:var(--good-bg);border-color:var(--good)}
+.ls-foot.bad{background:var(--bad-bg);border-color:var(--red)}
+.fb{flex:1 1 300px;min-width:0}
+.fb-title{font-family:var(--display);font-weight:900;font-size:24px;text-transform:uppercase;letter-spacing:.03em;line-height:1.1}
+.ls-foot.good .fb-title{color:var(--good)}
+.ls-foot.bad .fb-title{color:var(--red)}
+.fb-text{font-size:14px;color:var(--fg);max-width:62ch;margin-top:2px}
+.fb-text b{color:var(--fg)}
+#lsMain{min-width:150px;font-size:17px;padding:13px 22px}
+.endcard{text-align:center;padding-top:20px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.endcard h2{font-family:var(--display);font-size:48px;text-transform:uppercase;margin:0;line-height:1}
+.endstats{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.es{border:2px solid var(--line);border-radius:12px;padding:10px 16px;min-width:110px}
+.es b{display:block;font-family:var(--mono);font-size:24px}
+.es span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+
+/* ---------- labs / tools ---------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:22px}
+.panel h2{margin:0 0 4px;font-family:var(--display);font-size:28px;text-transform:uppercase;letter-spacing:.03em;line-height:1}
+.panel > p{margin:0 0 14px;color:var(--muted);font-size:14px;max-width:62ch}
+canvas.wave{width:100%;height:150px;display:block;background:var(--bg);border-radius:10px;border:1px solid var(--line)}
+.knobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 18px;margin:14px 0}
+.knob{display:flex;flex-direction:column;gap:2px;min-width:0}
+.knob label{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.knob label output{font-family:var(--mono);color:var(--fg)}
+.knob input[type=range]{width:100%;accent-color:var(--red)}
+.knob select{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:6px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chipbtn{background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:13px;font-weight:700}
+.chipbtn.on{background:var(--red);color:#2a0710;border-color:var(--red)}
+.explain{font-size:14px;color:var(--muted);margin:12px 0 0;max-width:62ch}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th,.tbl td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+.tbl th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500}
+.tbl td.mono{font-family:var(--mono)}
+.tbl tr.hot td{color:var(--amber)}
+.tbl tr[data-midi]{cursor:pointer}
+.tbl tr[data-midi]:hover td{background:var(--surface-2)}
+.tblwrap{overflow-x:auto}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.field input{width:130px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:var(--mono);font-size:18px;color:var(--fg)}
+.result{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:15px}
+.result p{margin:0 0 6px}
+.result p:last-child{margin:0}
+
+.gsearch{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:14px 0}
+.gloss{display:grid;gap:0}
+.term{padding:12px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:4px 16px}
+.term dt{font-weight:700}
+.term dd{margin:0;color:var(--muted);font-size:15px;min-width:0}
+@media (max-width:520px){.term{grid-template-columns:1fr}.today{grid-template-columns:auto 1fr}.today .btn{grid-column:1/-1}}
+.sources{font-size:14px;padding-left:18px}
+.sources li{margin-bottom:6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brandrow">
+      <div class="brand"><span class="flag" aria-hidden="true"><i style="background:var(--blue)"></i><i style="background:var(--fg)"></i><i style="background:var(--red)"></i></span>Frenchcore Academy</div>
+      <div class="stats">
+        <span class="stat" title="Day streak"><svg viewBox="0 0 24 24" fill="var(--amber)"><path d="M12 2c1 4-3 5.5-3 9a3 3 0 0 0 6 0c0-1.2-.4-2.1-.9-3 2.4 1.2 3.9 3.6 3.9 6.2A6 6 0 0 1 6 14.5C6 9 12 7 12 2z"/></svg><span id="sStreak">0</span></span>
+        <span class="stat" title="Total XP"><svg viewBox="0 0 24 24" fill="var(--blue)"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg><span id="sXp">0</span></span>
+        <span class="stat" title="Hearts"><svg viewBox="0 0 24 24" fill="var(--red)"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></svg><span id="sHearts">5</span></span>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" data-view="learn" aria-selected="true">Learn</button>
+      <button class="tab" role="tab" data-view="labs" aria-selected="false">Labs</button>
+      <button class="tab" role="tab" data-view="tools" aria-selected="false">Tools</button>
+      <button class="tab" role="tab" data-view="glossary" aria-selected="false">Glossary</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- LEARN -->
+  <section class="view" id="view-learn">
+    <div class="today">
+      <svg class="ring" viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="25" fill="none" stroke="var(--surface-2)" stroke-width="7"/><circle id="ringArc" cx="30" cy="30" r="25" fill="none" stroke="var(--amber)" stroke-width="7" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="157" transform="rotate(-90 30 30)"/></svg>
+      <div><h2 id="todayTitle">Daily goal</h2><p id="todayText">0 / 30 XP today</p></div>
+      <button class="btn primary" id="continueBtn">Continue</button>
+    </div>
+    <div id="path"></div>
+    <div class="settings">
+      <h3>Settings</h3>
+      <div class="setrow"><label for="goalSel">Daily XP goal</label><select id="goalSel"><option value="20">20 XP (casual)</option><option value="30">30 XP (regular)</option><option value="50">50 XP (serious)</option><option value="80">80 XP (intense)</option></select></div>
+      <div class="setrow"><label for="volRange">Master volume (start low, these kicks are loud)</label><input type="range" id="volRange" min="0" max="100" value="55"></div>
+      <div class="setrow"><label for="exploreChk">Explore mode: unlock every lesson</label><input type="checkbox" id="exploreChk"></div>
+      <div class="setrow"><label for="heartsChk">Unlimited hearts</label><input type="checkbox" id="heartsChk"></div>
+      <div class="setrow"><span id="resetLabel">Reset all progress</span><span class="row"><button class="btn small" id="resetBtn">Reset</button><button class="btn small red" id="resetYes" hidden>Yes, erase it</button></span></div>
+    </div>
+  </section>
+
+  <!-- LABS -->
+  <section class="view" id="view-labs" hidden>
+    <div class="panel" id="kickLab">
+      <p class="eyebrow">Lab 1</p>
+      <h2>Kick Lab</h2>
+      <p>A kick synthesised live in your browser: a sine wave with a fast pitch drop (the punch), a held, tuned body (the tail), a noise click, and a distortion stage. The picture is the real waveform. The dashed line shows when the next kick lands, so you can see whether your tail fits.</p>
+      <canvas class="wave" id="kickCanvas" aria-label="Kick waveform"></canvas>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary small" id="kPlay">Play once</button>
+        <button class="btn small" id="kLoop">Loop four-on-the-floor</button>
+        <span style="flex:1"></span>
+        <span class="row" id="kPresets"></span>
+      </div>
+      <div class="knobs">
+        <div class="knob"><label for="kNote">Tail note <output id="kNoteO"></output></label><select id="kNote"></select></div>
+        <div class="knob"><label for="kStart">Start pitch <output id="kStartO"></output></label><input type="range" id="kStart" min="100" max="900" step="10"></div>
+        <div class="knob"><label for="kDrop">Pitch drop time <output id="kDropO"></output></label><input type="range" id="kDrop" min="8" max="120" step="1"></div>
+        <div class="knob"><label for="kTail">Tail length <output id="kTailO"></output></label><input type="range" id="kTail" min="40" max="600" step="5"></div>
+        <div class="knob"><label for="kDrive">Distortion <output id="kDriveO"></output></label><input type="range" id="kDrive" min="0" max="100" step="1"></div>
+        <div class="knob"><label for="kClick">Click <output id="kClickO"></output></label><input type="range" id="kClick" min="0" max="100" step="1"></div>
+        <div class="knob"><label for="kGlide">Tail pitch fall <output id="kGlideO"></output></label><input type="range" id="kGlide" min="0" max="25" step="1"></div>
+        <div class="knob"><label for="kBpm">Loop tempo <output id="kBpmO"></output></label><input type="range" id="kBpm" min="120" max="240" step="1"></div>
+      </div>
+      <p class="explain" id="kExplain"></p>
+    </div>
+
+    <div class="panel" id="beatLab">
+      <p class="eyebrow">Lab 2</p>
+      <h2>Beat Lab</h2>
+      <p>A 16-step grid, like FL Studio's Channel Rack: one row of 16 steps is one bar of sixteenth notes in 4/4. Steps 1, 5, 9 and 13 are the four beats. The kick uses your Kick Lab settings.</p>
+      <div class="seqwrap"><div class="seq" id="bGrid"></div></div>
+      <div class="seqctl">
+        <button class="btn primary small" id="bPlay">Play</button>
+        <label class="field" style="flex-direction:row;align-items:center;gap:8px" for="bBpm">Tempo <input type="range" id="bBpm" min="120" max="240" value="200" style="width:140px"> <output class="mono" id="bBpmO" style="color:var(--fg)">200</output></label>
+        <span class="row" id="bPresets"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOLS -->
+  <section class="view" id="view-tools" hidden>
+    <div class="panel">
+      <p class="eyebrow">Tool</p>
+      <h2>Tempo to milliseconds</h2>
+      <p>Note lengths for any tempo. Use them for delay times, compressor release, or to check that a kick tail ends before the next kick (the 1/4 value).</p>
+      <div class="fields"><label class="field" for="tBpm">Tempo (BPM)<input id="tBpm" type="text" inputmode="decimal" value="200"></label></div>
+      <div class="tblwrap"><table class="tbl" id="tTable"></table></div>
+    </div>
+    <div class="panel">
+      <p class="eyebrow">Tool</p>
+      <h2>Remix tempo planner</h2>
+      <p>Enter the original song's tempo and your target. The planner compares stretching straight to the target with the half-time route (stretching to half the target, so one original beat lasts two of your beats).</p>
+      <div class="fields">
+        <label class="field" for="rOrig">Original BPM<input id="rOrig" type="text" inputmode="decimal" value="128"></label>
+        <label class="field" for="rTarget">Target BPM<input id="rTarget" type="text" inputmode="decimal" value="200"></label>
+      </div>
+      <div class="result" id="rOut"></div>
+    </div>
+    <div class="panel">
+      <p class="eyebrow">Tool</p>
+      <h2>Note frequencies</h2>
+      <p>Equal temperament, A4 = 440 Hz, using the octave numbering where middle C is C4 (FL Studio's Piano Roll labels middle C as C5, so add one to these octave numbers there). Kick tails usually sit around the highlighted notes. Tap a row to hear a kick tuned to it and to send it to the Kick Lab.</p>
+      <div class="tblwrap"><table class="tbl" id="nTable"></table></div>
+    </div>
+  </section>
+
+  <!-- GLOSSARY -->
+  <section class="view" id="view-glossary" hidden>
+    <p class="eyebrow">Reference</p>
+    <h2 style="font-family:var(--display);font-size:36px;text-transform:uppercase;margin:4px 0 0;line-height:1">Glossary</h2>
+    <p class="lead">Every term used in the lessons, in plain words.</p>
+    <input class="gsearch" id="gSearch" type="search" placeholder="Search terms, e.g. tail, sidechain, stem" aria-label="Search the glossary">
+    <dl class="gloss" id="gList"></dl>
+    <div class="panel" style="margin-top:30px">
+      <h2>Sources and further reading</h2>
+      <p>The facts in the lessons were checked against these. Production tips (envelope times, frequency ranges) are common starting points, not rules: trust your ears and your reference tracks.</p>
+      <ul class="sources">
+        <li><a href="https://en.wikipedia.org/wiki/Frenchcore" target="_blank" rel="noopener">Frenchcore, Wikipedia</a>: origins (Micropoint, founded by Radium and Al Core in 1992; Radium's label Psychik Genocide) and the modern melodic wave (Dr. Peacock, Sefa).</li>
+        <li><a href="https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/basics_shortcuts.htm" target="_blank" rel="noopener">FL Studio manual: keyboard shortcuts</a>: F8 Plugin Picker, F9 Mixer, Alt+F8 Browser, Ctrl+T typing keyboard to piano.</li>
+        <li><a href="https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/Fruity%20Limiter.htm" target="_blank" rel="noopener">FL Studio manual: Fruity Limiter</a>: sidechain routing and the COMP mode.</li>
+        <li><a href="https://mixelite.com/blog/top-3-ways-to-sidechain-in-fl-studio/" target="_blank" rel="noopener">Mix Elite: how to sidechain in FL Studio</a>: step-by-step sidechain routing.</li>
+        <li><a href="https://musictech.com/news/gear/fl-studio-21-2-update-stem-separation-cloud-royalty-free-library" target="_blank" rel="noopener">MusicTech: FL Studio 21.2 adds Stem Separation</a>: drums, bass, instruments and vocals; internet connection required.</li>
+        <li><a href="https://septum.gumroad.com/l/septumtutorial" target="_blank" rel="noopener">Septum: frenchcore kick tutorial (.flp)</a>: an example of a layered kick (punch, "tok" layers, resonance, tail).</li>
+        <li><a href="https://hcontunesmedia.squarespace.com/articles/frenchcore-kicks-with-serum" target="_blank" rel="noopener">Hcontunes: frenchcore kicks with Serum</a>: why volume envelopes come first.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<!-- LESSON OVERLAY -->
+<div class="lesson" id="lesson" hidden>
+  <div class="ls-top"><div class="wrap">
+    <button class="x" id="lsClose" aria-label="Leave lesson"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <div class="bar" aria-hidden="true"><i id="lsBar"></i></div>
+    <span class="stat" id="lsHearts"><svg viewBox="0 0 24 24" fill="var(--red)"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></svg><span>5</span></span>
+  </div></div>
+  <div class="ls-body" id="lsBody"><div class="wrap" id="lsInner"></div></div>
+  <footer class="ls-foot" id="lsFoot"><div class="wrap">
+    <div class="fb"><div class="fb-title" id="fbTitle"></div><div class="fb-text" id="fbText"></div></div>
+    <button class="btn good" id="lsMain">Check</button>
+  </div></footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   AUDIO ENGINE: everything is synthesised with the Web Audio API.
+   ===================================================================== */
+const KICK_PRESETS = {
+  "Clean":      {note:31, start:220, drop:0.050, tail:0.16, drive:0.00, click:0.15, glide:0.05},
+  "Hardcore":   {note:31, start:420, drop:0.035, tail:0.20, drive:0.55, click:0.45, glide:0.06},
+  "Frenchcore": {note:31, start:480, drop:0.028, tail:0.25, drive:0.85, click:0.60, glide:0.10},
+  "Too long":   {note:31, start:480, drop:0.028, tail:0.48, drive:0.85, click:0.60, glide:0.10}
+};
+const midiHz = m => 440 * Math.pow(2, (m - 69) / 12);
+const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const noteName = m => NOTE_NAMES[m % 12] + (Math.floor(m / 12) - 1);
+
+const A = {
+  ctx: null, out: null, vol: 0.55, current: null, noise: new WeakMap(), curves: {},
+  init() {
+    if (!this.ctx) {
+      const C = window.AudioContext || window.webkitAudioContext;
+      if (!C) return null;
+      this.ctx = new C();
+      const comp = this.ctx.createDynamicsCompressor();
+      comp.threshold.value = -8; comp.knee.value = 4; comp.ratio.value = 12; comp.attack.value = 0.002; comp.release.value = 0.12;
+      this.out = this.ctx.createGain();
+      this.out.gain.value = this.vol;
+      this.out.connect(comp); comp.connect(this.ctx.destination);
+    }
+    if (this.ctx.state === "suspended") this.ctx.resume();
+    return this.ctx;
+  },
+  setVol(v) { this.vol = v; if (this.out) this.out.gain.setTargetAtTime(v, this.ctx.currentTime, 0.02); },
+  bus() {
+    this.stopAll();
+    const g = this.ctx.createGain(); g.connect(this.out); this.current = g; return g;
+  },
+  stopAll() {
+    Seq.stop();
+    if (this.current && this.ctx) {
+      const g = this.current; this.current = null;
+      g.gain.setTargetAtTime(0, this.ctx.currentTime, 0.01);
+      setTimeout(() => { try { g.disconnect(); } catch (e) {} }, 150);
+    }
+  },
+  noiseBuf(ctx) {
+    if (!this.noise.has(ctx)) {
+      const b = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.5), ctx.sampleRate);
+      const d = b.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      this.noise.set(ctx, b);
+    }
+    return this.noise.get(ctx);
+  },
+  curve(drive) {
+    const key = Math.round(drive * 100);
+    if (!this.curves[key]) {
+      const n = 2048, c = new Float32Array(n), k = 1 + drive * 30, norm = Math.tanh(k);
+      for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; c[i] = Math.tanh(k * x) / norm; }
+      this.curves[key] = c;
+    }
+    return this.curves[key];
+  }
+};
+
+function kickParams(p) {
+  const P = Object.assign({}, KICK_PRESETS.Frenchcore, p || {});
+  P.pitch = P.pitch || midiHz(P.note);
+  return P;
+}
+function buildKick(ctx, dest, t, p) {
+  const P = kickParams(p);
+  const end = t + P.drop + P.tail;
+  const osc = ctx.createOscillator(); osc.type = "sine";
+  osc.frequency.setValueAtTime(Math.max(P.start, P.pitch), t);
+  osc.frequency.exponentialRampToValueAtTime(P.pitch, t + P.drop);
+  osc.frequency.exponentialRampToValueAtTime(P.pitch * (1 - P.glide), end);
+  const amp = ctx.createGain();
+  amp.gain.setValueAtTime(0.0001, t);
+  amp.gain.exponentialRampToValueAtTime(1, t + 0.002);
+  amp.gain.setValueAtTime(1, t + P.drop + P.tail * 0.6);
+  amp.gain.exponentialRampToValueAtTime(0.0001, end);
+  const sh = ctx.createWaveShaper(); sh.curve = A.curve(P.drive); sh.oversample = "4x";
+  const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 9000;
+  const post = ctx.createGain(); post.gain.value = 0.6 - P.drive * 0.15;
+  osc.connect(amp); amp.connect(sh); sh.connect(lp); lp.connect(post); post.connect(dest);
+  osc.start(t); osc.stop(end + 0.05);
+  if (P.click > 0) {
+    const n = ctx.createBufferSource(); n.buffer = A.noiseBuf(ctx);
+    const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 2500;
+    const cg = ctx.createGain();
+    cg.gain.setValueAtTime(P.click * 0.7, t);
+    cg.gain.exponentialRampToValueAtTime(0.0001, t + 0.012);
+    n.connect(hp); hp.connect(cg); cg.connect(post);
+    n.start(t); n.stop(t + 0.03);
+  }
+}
+function buildBass(ctx, dest, t, p, bpm) {
+  const P = kickParams(p);
+  const len = Math.min(0.16, 60 / bpm * 0.42);
+  const o = ctx.createOscillator(); o.type = "sawtooth";
+  o.frequency.setValueAtTime(P.pitch * 2.02, t);
+  o.frequency.exponentialRampToValueAtTime(P.pitch * 2, t + 0.02);
+  const s = ctx.createOscillator(); s.type = "sine"; s.frequency.value = P.pitch;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.8, t + 0.004);
+  g.gain.setValueAtTime(0.8, t + len * 0.5); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+  const sh = ctx.createWaveShaper(); sh.curve = A.curve(0.5); sh.oversample = "2x";
+  const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1600; lp.Q.value = 2;
+  const out = ctx.createGain(); out.gain.value = 0.32;
+  o.connect(g); s.connect(g); g.connect(sh); sh.connect(lp); lp.connect(out); out.connect(dest);
+  o.start(t); s.start(t); o.stop(t + len + 0.02); s.stop(t + len + 0.02);
+}
+function buildClap(ctx, dest, t) {
+  const n = ctx.createBufferSource(); n.buffer = A.noiseBuf(ctx);
+  const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1300; bp.Q.value = 0.9;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  [0, 0.011, 0.022].forEach(o => { g.gain.setValueAtTime(0.55, t + o); g.gain.exponentialRampToValueAtTime(0.08, t + o + 0.009); });
+  g.gain.setValueAtTime(0.4, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+  n.connect(bp); bp.connect(g); g.connect(dest); n.start(t); n.stop(t + 0.22);
+}
+function buildHat(ctx, dest, t) {
+  const n = ctx.createBufferSource(); n.buffer = A.noiseBuf(ctx);
+  const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 7500;
+  const g = ctx.createGain(); g.gain.setValueAtTime(0.22, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+  n.connect(hp); hp.connect(g); g.connect(dest); n.start(t); n.stop(t + 0.06);
+}
+function scheduleStep(ctx, dest, t, pat, i, bpm, kp) {
+  if (pat.kick && pat.kick[i]) buildKick(ctx, dest, t, kp);
+  if (pat.bass && pat.bass[i]) buildBass(ctx, dest, t, kp, bpm);
+  if (pat.clap && pat.clap[i]) buildClap(ctx, dest, t);
+  if (pat.hat && pat.hat[i]) buildHat(ctx, dest, t);
+}
+const toGrid = steps => { const a = new Array(16).fill(false); (steps || []).forEach(s => a[s] = true); return a; };
+function patFromSpec(spec) { const p = {}; for (const k in spec) p[k] = Array.isArray(spec[k]) && typeof spec[k][0] === "boolean" ? spec[k] : toGrid(spec[k]); return p; }
+
+/* play a "sound spec" used by lessons: {type:'kick', p} or {type:'loop', bpm, bars, pattern, kick} */
+function playSpec(spec) {
+  const ctx = A.init(); if (!ctx) { toast("Your browser does not support Web Audio."); return; }
+  const bus = A.bus(); const t0 = ctx.currentTime + 0.05;
+  if (spec.type === "kick") { buildKick(ctx, bus, t0, spec.p); return; }
+  if (spec.type === "kicks") { const d = 60 / (spec.bpm || 200); for (let i = 0; i < (spec.n || 4); i++) buildKick(ctx, bus, t0 + i * d, spec.p); return; }
+  if (spec.type === "tone") {
+    const o = ctx.createOscillator(); o.frequency.value = spec.hz; o.type = spec.wave || "sine";
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.5, t0 + 0.02);
+    g.gain.setValueAtTime(0.5, t0 + spec.dur - 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t0 + spec.dur);
+    let node = o;
+    if (spec.drive) { const sh = ctx.createWaveShaper(); sh.curve = A.curve(spec.drive); o.connect(sh); node = sh; }
+    node.connect(g); g.connect(bus); o.start(t0); o.stop(t0 + spec.dur + 0.05); return;
+  }
+  if (spec.type === "loop") {
+    const pat = patFromSpec(spec.pattern), bpm = spec.bpm, sd = 60 / bpm / 4, bars = spec.bars || 2;
+    for (let b = 0; b < bars; b++) for (let i = 0; i < 16; i++) scheduleStep(ctx, bus, t0 + (b * 16 + i) * sd, pat, i, bpm, spec.kick);
+  }
+}
+
+/* looping step sequencer */
+const Seq = {
+  playing: false, timer: null, step: 0, next: 0, bus: null, bpm: 200, getPat: null, getKick: null, onStep: null, owner: null,
+  start(getPat, bpm, onStep, getKick, owner) {
+    const ctx = A.init(); if (!ctx) return;
+    A.stopAll();
+    this.bus = A.bus(); this.getPat = getPat; this.bpm = bpm; this.onStep = onStep; this.getKick = getKick || (() => LAB);
+    this.owner = owner || null; this.playing = true; this.step = 0; this.next = ctx.currentTime + 0.06;
+    this.timer = setInterval(() => this.tick(), 25); this.tick();
+  },
+  tick() {
+    const ctx = A.ctx;
+    while (this.next < ctx.currentTime + 0.12) {
+      const i = this.step, t = this.next;
+      scheduleStep(ctx, this.bus, t, this.getPat(), i, this.bpm, this.getKick());
+      if (this.onStep) { const cb = this.onStep; setTimeout(() => { if (this.playing) cb(i); }, Math.max(0, (t - ctx.currentTime) * 1000)); }
+      this.next += 60 / this.bpm / 4; this.step = (i + 1) % 16;
+    }
+  },
+  stop() {
+    if (!this.playing) return;
+    this.playing = false; clearInterval(this.timer); this.timer = null;
+    const o = this.owner; this.owner = null;
+    if (this.onStep) this.onStep(-1);
+    if (o && o.onStop) o.onStop();
+  }
+};
+
+async function renderKickWave(p) {
+  const P = kickParams(p);
+  const sr = 22050, dur = Math.max(0.45, P.drop + P.tail + 0.05);
+  const OC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  if (!OC) return null;
+  const oc = new OC(1, Math.ceil(sr * dur), sr);
+  const g = oc.createGain(); g.gain.value = 1; g.connect(oc.destination);
+  buildKick(oc, g, 0, P);
+  const buf = await oc.startRendering();
+  return { data: buf.getChannelData(0), sr, dur };
+}
+
+/* =====================================================================
+   COURSE CONTENT
+   item types: learn, mcq, tf, num, order, match, listen, seq
+   step numbers in text are 1-16; arrays in targets are 0-15
+   ===================================================================== */
+const K = KICK_PRESETS;
+const FC_GROOVE = { kick: [0,4,8,12], bass: [2,6,10,14], clap: [4,12], hat: [2,6,10,14] };
+
+const UNITS = [
+{ id:"u1", title:"FL Studio: first steps", desc:"The five windows, patterns, songs, and where your sound goes.", color:"var(--blue)", lessons:[
+  { id:"u1l1", title:"Find your way around", items:[
+    { t:"learn", title:"Five windows", body:`<p>Almost everything in FL Studio happens in five windows. Learn their shortcuts on day one:</p>
+      <ul><li><b>Browser</b> <kbd>Alt+F8</kbd>: your samples, presets, plugins and projects.</li>
+      <li><b>Channel Rack</b> <kbd>F6</kbd>: the list of instruments and samples, with the step sequencer.</li>
+      <li><b>Piano Roll</b> <kbd>F7</kbd>: where you draw notes, length and velocity.</li>
+      <li><b>Playlist</b> <kbd>F5</kbd>: where patterns and audio are arranged into a song.</li>
+      <li><b>Mixer</b> <kbd>F9</kbd>: where sound is processed with effects (EQ, distortion, limiter).</li></ul>
+      <p><kbd>F8</kbd> opens the Plugin Picker. <kbd>Space</kbd> plays and stops.</p>
+      <p class="note">Single-key shortcuts only work when “Typing keyboard to piano” (<kbd>Ctrl+T</kbd>) is off. If your keys play notes instead, that's why.</p>` },
+    { t:"match", q:"Match each window to its shortcut.", pairs:[["Playlist","F5"],["Channel Rack","F6"],["Piano Roll","F7"],["Mixer","F9"],["Browser","Alt+F8"]], why:"F5 to F9 go from the song view (Playlist) through instruments (Channel Rack) and notes (Piano Roll) to the Mixer. The Browser is Alt+F8." },
+    { t:"mcq", q:"You want to write a melody note by note. Which window?", options:["Piano Roll","Mixer","Playlist","Browser"], a:0, why:"The Piano Roll is the note editor. The Playlist arranges whole patterns; the Mixer processes audio." },
+    { t:"mcq", q:"Where do you add a limiter to the master output?", options:["Mixer","Channel Rack","Piano Roll","Browser"], a:0, why:"Effects live in the Mixer's effect slots. The Master track is the first track in the Mixer." },
+    { t:"tf", q:"Pressing F8 opens the Plugin Picker.", a:true, why:"The FL Studio manual lists F8 as “Open Plugin Picker”." },
+    { t:"mcq", q:"You press F6 and a note plays instead of the Channel Rack opening. What is switched on?", options:["Typing keyboard to piano","Song mode","Metronome","Recording"], a:0, why:"With “Typing keyboard to piano” (Ctrl+T) on, your computer keys play notes, so single-key shortcuts are disabled." }
+  ]},
+  { id:"u1l2", title:"Patterns and songs", items:[
+    { t:"learn", title:"Pattern vs Song", body:`<p>FL Studio builds a track from <b>patterns</b>. A pattern is a clip of notes and steps that can hold data for several channels at once (kick, bass and clap in one pattern, for example).</p>
+      <p>The <b>Playlist</b> arranges pattern clips (and audio clips) over time. That arrangement is your song.</p>
+      <p>The transport has a <b>PAT / SONG</b> switch:</p>
+      <ul><li><b>Pattern mode</b> loops only the selected pattern. Use it while you build a loop.</li>
+      <li><b>Song mode</b> plays the Playlist from the playhead. Use it to hear the arrangement.</li></ul>
+      <p><kbd>L</kbd> toggles between the two modes. The project tempo is set in the tempo display of the transport panel.</p>` },
+    { t:"mcq", q:"You press Space and only hear the same one-bar loop, not your arrangement. Why?", options:["You are in Pattern mode","The Mixer is muted","The tempo is too high","The Piano Roll is closed"], a:0, why:"Pattern mode loops the selected pattern only. Switch to Song mode (L) to play the Playlist." },
+    { t:"tf", q:"One pattern can contain the kick, the bass and the clap at the same time.", a:true, why:"A pattern stores data for any channel in the Channel Rack. Many producers still split them (one pattern per element) to arrange more freely." },
+    { t:"order", q:"Put these steps in order to make your first loop and place it in the song.", items:["Load a kick sample into the Channel Rack","Click steps in the step sequencer","Press Space in Pattern mode to hear the loop","Paint the pattern into the Playlist","Switch to Song mode and press Space"], why:"Build the loop in Pattern mode first, then place it in the Playlist and listen in Song mode." },
+    { t:"mcq", q:"By default the Channel Rack shows 16 steps per channel. In 4/4, what is one step?", options:["A sixteenth note","A quarter note (one beat)","A whole bar","An eighth note"], a:0, why:"16 steps fill one bar of 4/4, so each step is a sixteenth note. Every 4 steps is one beat." }
+  ]},
+  { id:"u1l3", title:"Channel to Mixer", items:[
+    { t:"learn", title:"Where your sound goes", body:`<p>Each channel in the Channel Rack has a small number box on its right: its <b>target Mixer track</b>. The sound of that channel goes to that Mixer insert track, and every insert goes to the <b>Master</b> track by default.</p>
+      <p>Signal flow: <b>Channel → Mixer insert → Master → your speakers</b>.</p>
+      <p>Give the kick, the bass and the lead their own insert tracks. Then you can distort the kick without distorting the vocal, and see each element on its own meter.</p>
+      <p class="note">A channel left on Mixer track 0 (the Master) has no insert of its own: anything you put there processes the whole mix, not just that sound.</p>` },
+    { t:"order", q:"Order the signal flow, from source to speakers.", items:["Channel (sample or synth)","Mixer insert track","Master track","Speakers or headphones"], why:"The channel feeds its insert track, inserts feed the Master, and the Master feeds your audio output." },
+    { t:"mcq", q:"Why give the kick its own Mixer insert track?", options:["So you can process and meter it on its own","Because FL Studio refuses to play unrouted kicks","It makes the kick louder automatically","It saves CPU"], a:0, why:"Separate tracks mean separate effects and meters. That's essential when the kick needs heavy distortion and nothing else does." },
+    { t:"tf", q:"An effect only works if it is placed on the Master track.", a:false, why:"Effects work on any insert track. The Master is for processing the whole mix (usually a limiter at the end)." }
+  ]}
+]},
+{ id:"u2", title:"Tempo and rhythm", desc:"BPM maths, the 16-step grid, four-on-the-floor and the offbeat.", color:"var(--red)", lessons:[
+  { id:"u2l1", title:"BPM and the grid", items:[
+    { t:"learn", title:"Beats into milliseconds", body:`<p><b>BPM</b> is beats (quarter notes) per minute. One minute is 60,000 ms, so:</p>
+      <p class="mono" style="font-size:20px">ms per beat = 60000 ÷ BPM</p>
+      <ul><li>At <b>200 BPM</b>, one beat lasts <b>300 ms</b>.</li>
+      <li>A sixteenth (one step) is a quarter of that: <b>75 ms</b>.</li>
+      <li>A bar of 4/4 has 4 beats: <b>1.2 s</b>.</li></ul>
+      <p>These numbers matter: at 200 BPM your kick has 300 ms before the next one arrives.</p>`,
+      demos:[{label:"Hear 4 kicks at 200 BPM", sound:{type:"kicks", bpm:200, n:8, p:K.Frenchcore}}] },
+    { t:"num", q:"How many milliseconds is one beat at 200 BPM?", a:300, unit:"ms", why:"60000 ÷ 200 = 300 ms." },
+    { t:"num", q:"How long is one step (a sixteenth) at 200 BPM?", a:75, unit:"ms", why:"One beat is 300 ms, and a sixteenth is a quarter beat: 300 ÷ 4 = 75 ms." },
+    { t:"num", q:"How long is one bar of 4/4 at 200 BPM, in seconds?", a:1.2, tol:0.01, unit:"s", why:"4 beats × 300 ms = 1200 ms = 1.2 s." },
+    { t:"num", q:"How many milliseconds is one beat at 190 BPM? (one decimal is fine)", a:315.8, tol:0.6, unit:"ms", why:"60000 ÷ 190 ≈ 315.8 ms. Slower tempo, longer beat, more room for the tail." },
+    { t:"mcq", q:"With a kick on every beat, how many steps are there from one kick to the next?", options:["4","2","8","16"], a:0, why:"A beat is 4 sixteenth steps, so the kicks sit on steps 1, 5, 9 and 13." }
+  ]},
+  { id:"u2l2", title:"The frenchcore pulse", items:[
+    { t:"learn", title:"Fast, four, and off", body:`<p><b>Frenchcore</b> is a style of hardcore. Sources give different ranges, roughly 180 to 220 BPM, and many tracks sit around <b>200 BPM</b>.</p>
+      <p>Its engine is a heavily distorted kick on <b>every beat</b> (four-on-the-floor), and a loud, distorted <b>offbeat bass</b> that hits between the kicks. Descriptions of the genre often name that offbeat bassline as what sets frenchcore apart from other hardcore.</p>
+      <p>“Offbeat” means the “and” between beats: steps 3, 7, 11 and 15 in a 16-step bar.</p>`,
+      demos:[{label:"Kick only", sound:{type:"loop", bpm:200, bars:2, pattern:{kick:[0,4,8,12]}, kick:K.Frenchcore}},{label:"Kick + offbeat bass", sound:{type:"loop", bpm:200, bars:2, pattern:{kick:[0,4,8,12], bass:[2,6,10,14]}, kick:K.Frenchcore}}] },
+    { t:"mcq", q:"Which tempo is most typical for frenchcore?", options:["200 BPM","128 BPM","150 BPM","300 BPM"], a:0, why:"Around 200 BPM is the usual figure. 128 is house tempo, 150 is closer to hardstyle." },
+    { t:"listen", q:"Which loop is at a typical frenchcore tempo?", options:[{label:"Loop A", sound:{type:"loop", bpm:140, bars:2, pattern:{kick:[0,4,8,12], bass:[2,6,10,14]}, kick:K.Frenchcore}},{label:"Loop B", sound:{type:"loop", bpm:200, bars:2, pattern:{kick:[0,4,8,12], bass:[2,6,10,14]}, kick:K.Frenchcore}}], a:1, why:"Loop B runs at 200 BPM. Loop A is 140 BPM, which feels like a half-speed groove by comparison." },
+    { t:"seq", q:"Program a four-on-the-floor kick: one kick on every beat.", rows:["kick"], target:{kick:[0,4,8,12]}, bpm:200, why:"Beats fall on steps 1, 5, 9 and 13." },
+    { t:"seq", q:"The kick is set. Add the offbeat bass between every kick.", rows:["kick","bass"], init:{kick:[0,4,8,12]}, lock:["kick"], target:{kick:[0,4,8,12], bass:[2,6,10,14]}, bpm:200, why:"The offbeats are halfway between beats: steps 3, 7, 11 and 15." },
+    { t:"tf", q:"An offbeat bass hits at the same time as the kick.", a:false, why:"Offbeat means between the beats. The kick and the offbeat bass take turns, which is what makes the bounce." }
+  ]},
+  { id:"u2l3", title:"Count in phrases", items:[
+    { t:"learn", title:"4, 8, 16, 32 bars", body:`<p>Dance music is built in <b>phrases</b> of 4, 8, 16 or 32 bars. Sections usually change on those boundaries, so a DJ can mix your track into another one and a crowd feels the change coming.</p>
+      <p>At 200 BPM a bar is 1.2 s, so a 16-bar phrase lasts <b>19.2 s</b> and 32 bars last <b>38.4 s</b>.</p>
+      <p>In the Playlist, a new 16-bar section starts on bar 17, 33, 49 and so on, because bar 1 is the first bar.</p>` },
+    { t:"num", q:"How long are 32 bars at 200 BPM, in seconds?", a:38.4, tol:0.05, unit:"s", why:"32 bars × 1.2 s = 38.4 s." },
+    { t:"mcq", q:"Your intro is 16 bars long, starting on bar 1. On which bar should the next section start?", options:["Bar 17","Bar 16","Bar 13","Bar 20"], a:0, why:"Bars 1 to 16 are the intro, so the new section starts on bar 17." },
+    { t:"tf", q:"A 16-bar phrase at 200 BPM lasts less than 20 seconds.", a:true, why:"16 × 1.2 s = 19.2 s." },
+    { t:"num", q:"An 8-bar build-up at 200 BPM lasts how many seconds?", a:9.6, tol:0.05, unit:"s", why:"8 × 1.2 s = 9.6 s." }
+  ]}
+]},
+{ id:"u3", title:"Anatomy of a kick", desc:"Click, punch and tail. Pitch envelopes and tuning.", color:"var(--amber)", lessons:[
+  { id:"u3l1", title:"Click, punch, tail", items:[
+    { t:"learn", title:"Three parts", body:`<p>A hard kick is easier to design if you think of it in three parts:</p>
+      <ul><li><b>Click (transient)</b>: the first few milliseconds. Bright, short, it helps the kick cut through.</li>
+      <li><b>Punch</b>: a fast downward pitch sweep, from a few hundred Hz down to the base note in tens of milliseconds. This is the hit you feel.</li>
+      <li><b>Tail</b>: what rings after the punch. In frenchcore it's long, distorted and tuned to a note, so it works almost like a bass.</li></ul>
+      <p>Open the <b>Kick Lab</b> later to change each part and watch the waveform.</p>`,
+      demos:[{label:"Click only", sound:{type:"kick", p:{note:31,start:200,drop:0.01,tail:0.01,drive:0,click:1}}},{label:"Punch, short tail", sound:{type:"kick", p:{note:31,start:450,drop:0.03,tail:0.06,drive:0.2,click:0.3}}},{label:"Full frenchcore kick", sound:{type:"kick", p:K.Frenchcore}}] },
+    { t:"match", q:"Match each part to what it does.", pairs:[["Click","Very short bright attack"],["Punch","Fast pitch drop you feel"],["Tail","Tuned, sustained, bass-like"]], why:"Click is the first few ms, punch is the pitch sweep, the tail is the held tone after it." },
+    { t:"listen", q:"Which kick has the longer tail?", options:[{label:"Kick A", sound:{type:"kick", p:Object.assign({}, K.Frenchcore, {tail:0.08})}},{label:"Kick B", sound:{type:"kick", p:Object.assign({}, K.Frenchcore, {tail:0.4})}}], a:1, why:"Kick B rings for 400 ms after the punch, Kick A for only 80 ms." },
+    { t:"mcq", q:"What creates the “punch” of a synthesised kick?", options:["A fast downward pitch sweep","A long reverb","A high-pass filter","Stereo widening"], a:0, why:"Starting high and dropping fast to the base note is what gives the punch." },
+    { t:"tf", q:"In frenchcore, the tail is usually tuned to the key of the track.", a:true, why:"Because the tail is long and tonal, it acts like a bass note. Out of key, it clashes with the melody." }
+  ]},
+  { id:"u3l2", title:"Pitch and tuning", items:[
+    { t:"learn", title:"Notes are frequencies", body:`<p>Every note has a frequency. In equal temperament with A4 = 440 Hz:</p>
+      <p class="mono" style="font-size:18px">f = 440 × 2^((n − 69) ÷ 12)</p>
+      <p>where n is the MIDI note number. Useful kick notes (octave 1, where middle C is C4):</p>
+      <ul><li>E1 ≈ 41.2 Hz · F1 ≈ 43.65 Hz · G1 = 49.0 Hz · A1 = 55 Hz</li></ul>
+      <p>Each octave <b>doubles</b> the frequency: A1 = 55 Hz, A2 = 110 Hz. Each semitone multiplies it by about 1.0595.</p>
+      <p class="note">FL Studio's Piano Roll labels middle C as C5, so its octave numbers are one higher than this convention. The frequencies are the same.</p>`,
+      demos:[{label:"Tail on F1", sound:{type:"kick", p:Object.assign({}, K.Frenchcore, {note:29})}},{label:"Tail on A1", sound:{type:"kick", p:Object.assign({}, K.Frenchcore, {note:33})}}] },
+    { t:"num", q:"A1 is 55 Hz. What is A2?", a:110, unit:"Hz", why:"One octave up doubles the frequency: 55 × 2 = 110 Hz." },
+    { t:"mcq", q:"Which note is about 49 Hz?", options:["G1","A1","E1","C2"], a:0, why:"G1 = 49.0 Hz. A1 is 55 Hz, E1 about 41.2 Hz, C2 about 65.4 Hz." },
+    { t:"tf", q:"Halving a frequency lowers the note by one octave.", a:true, why:"Octaves are a 2:1 ratio in both directions." },
+    { t:"num", q:"How many semitones up from F1 to A1?", a:4, unit:"semitones", why:"F → F# → G → G# → A: four semitones." },
+    { t:"listen", q:"Which tail is tuned higher?", options:[{label:"Kick A", sound:{type:"kick", p:Object.assign({}, K.Frenchcore, {note:28})}},{label:"Kick B", sound:{type:"kick", p:Object.assign({}, K.Frenchcore, {note:35})}}], a:1, why:"Kick B's tail is on B1 (about 61.7 Hz), Kick A's on E1 (about 41.2 Hz)." }
+  ]},
+  { id:"u3l3", title:"Layering and phase", items:[
+    { t:"learn", title:"Stacking layers", body:`<p>Many hard kicks are built from <b>layers</b>: a punch layer, a tail layer, sometimes a click or “tok” layer. Septum's frenchcore kick tutorial, for example, splits the kick into a punch, two tok layers, a resonance and a tail.</p>
+      <p>Rules that keep layers working together:</p>
+      <ul><li><b>Give each layer its own job and range.</b> Filter out what a layer doesn't need, so two layers don't fight for the same frequencies.</li>
+      <li><b>Line up the starts.</b> Even a few milliseconds of offset smear the hit.</li>
+      <li><b>Check phase.</b> Two low waves that are out of phase cancel each other and the kick gets weaker when you add a layer. Try flipping the polarity of one layer or nudging it.</li>
+      <li><b>Glue</b> the layers afterwards (a clipper or distortion on the group).</li></ul>` },
+    { t:"mcq", q:"You add a second sub layer and the kick gets thinner instead of bigger. Most likely cause?", options:["Phase cancellation","The tempo is too fast","The Piano Roll is in the wrong key","The click is too loud"], a:0, why:"When two low-frequency waves are out of phase they partly cancel. Flip polarity, nudge the timing, or filter one layer." },
+    { t:"tf", q:"Every layer of a kick should have lots of sub bass.", a:false, why:"Usually one layer owns the low end. The others are filtered so they only bring click, mids or texture." },
+    { t:"order", q:"Order a sensible workflow for a layered kick.", items:["Choose or design the punch layer","Make a tail layer tuned to the track's key","Line up the start of the layers and check phase","Filter each layer to its own range","Glue the group with a clipper or distortion","Check the result in mono at low volume"], why:"Sound sources first, then alignment, then EQ, then glue, then a sanity check at low volume and in mono." }
+  ]}
+]},
+{ id:"u4", title:"Distortion and the tail", desc:"Harmonics, clipping, FL's dirt plugins and tail shaping.", color:"#c28bff", lessons:[
+  { id:"u4l1", title:"What distortion does", items:[
+    { t:"learn", title:"Harmonics", body:`<p>Distortion (clipping, waveshaping, overdrive) changes the shape of the wave and adds <b>harmonics</b>: new frequencies at whole-number multiples of the original.</p>
+      <p>A clean 49 Hz sine is almost silent on a phone or laptop speaker. Distort it and you add 98, 147, 196 Hz and higher. Those you can hear everywhere, and they make the kick aggressive.</p>
+      <ul><li><b>Hard clipping</b> cuts peaks flat: harsh, buzzy.</li>
+      <li><b>Soft clipping / saturation</b> rounds them: warmer, smoother.</li></ul>
+      <p>Hard kicks are often distorted in several stages, with EQ in between.</p>`,
+      demos:[{label:"Clean 49 Hz sine", sound:{type:"tone", hz:49, dur:1.0}},{label:"Same sine, distorted", sound:{type:"tone", hz:49, dur:1.0, drive:0.9}}] },
+    { t:"listen", q:"Which kick is distorted?", options:[{label:"Kick A", sound:{type:"kick", p:Object.assign({}, K.Frenchcore, {drive:0.9})}},{label:"Kick B", sound:{type:"kick", p:Object.assign({}, K.Frenchcore, {drive:0})}}], a:0, why:"Kick A has heavy waveshaping. Kick B is the same kick, clean." },
+    { t:"num", q:"What is the 2nd harmonic of a 49 Hz tail?", a:98, unit:"Hz", why:"The 2nd harmonic is twice the fundamental: 2 × 49 = 98 Hz." },
+    { t:"mcq", q:"Why can you hear a distorted 45 Hz kick on laptop speakers?", options:["Distortion adds higher harmonics the speakers can play","Laptop speakers reproduce 45 Hz well","Distortion lowers the pitch","Distortion makes it mono"], a:0, why:"Small speakers barely reproduce 45 Hz. The harmonics (90, 135, 180 Hz and up) carry the kick." },
+    { t:"tf", q:"Soft clipping rounds the peaks more gently than hard clipping.", a:true, why:"That's the difference between them: hard clipping cuts flat, soft clipping bends smoothly." }
+  ]},
+  { id:"u4l2", title:"FL Studio dirt tools", items:[
+    { t:"learn", title:"Stock plugins", body:`<p>FL Studio's own plugins are enough to make a frenchcore kick:</p>
+      <ul><li><b>Fruity Fast Dist</b> and <b>Fruity Blood Overdrive</b>: quick, simple distortion.</li>
+      <li><b>Fruity WaveShaper</b>: you draw the distortion curve yourself.</li>
+      <li><b>Fruity Soft Clipper</b>: rounds peaks, great for glue and loudness.</li>
+      <li><b>Distructor</b>: a multi-effect with several distortion types.</li>
+      <li><b>Fruity Parametric EQ 2</b>: shape before and after distortion.</li>
+      <li><b>Fruity Limiter</b>: limiting, compression and sidechain.</li></ul>
+      <p><b>Order matters.</b> EQ <i>before</i> distortion decides what gets distorted (boost mids there and the tail screams). EQ <i>after</i> cleans up what the distortion created.</p>
+      <p class="note">Which plugins you have depends on your FL Studio edition. Check the Plugin Picker (F8).</p>` },
+    { t:"mcq", q:"Which plugin lets you draw your own distortion curve?", options:["Fruity WaveShaper","Fruity Limiter","Fruity Parametric EQ 2","Fruity Soft Clipper"], a:0, why:"WaveShaper maps input level to output level with a curve you draw." },
+    { t:"tf", q:"EQ before distortion and EQ after distortion give the same result.", a:false, why:"Distortion is non-linear. What you boost before it gets distorted harder and creates new harmonics; EQ after only shapes the result." },
+    { t:"mcq", q:"You want the tail to sound more aggressive in the mids without more sub. What do you try first?", options:["Boost the mids with EQ before the distortion","Add more sub with EQ after the distortion","Raise the project tempo","Add reverb on the Master"], a:0, why:"Boosting a range before the distortion makes it distort harder, which adds energy there." }
+  ]},
+  { id:"u4l3", title:"Shaping the tail", items:[
+    { t:"learn", title:"Length, pitch, envelope", body:`<p>Two common ways to get a long tail:</p>
+      <ul><li><b>Reverb + distortion</b>: a classic hardcore trick. Distorting a kick's reverb turns the reverb into a sustained, gritty tail.</li>
+      <li><b>Synthesised tail</b>: a sine or other wave in a synth (3x Osc, Sytrus, or a third-party synth such as Serum) with its pitch automated. The tail can then follow notes through the track, a “tonal” or melodic kick.</li></ul>
+      <p>The <b>volume envelope</b> is the most important control. At 200 BPM the next kick arrives after 300 ms. If your kick lasts longer, the tails overlap or get cut, and the groove turns to mush.</p>`,
+      demos:[{label:"Fits: 280 ms total, at 200 BPM", sound:{type:"kicks", bpm:200, n:6, p:K.Frenchcore}},{label:"Too long: 500 ms, at 200 BPM", sound:{type:"kicks", bpm:200, n:6, p:K["Too long"]}}] },
+    { t:"num", q:"At 200 BPM, kicks every beat: what is the longest your kick can last before it overlaps the next one?", a:300, unit:"ms", why:"One beat at 200 BPM is 300 ms, so the whole kick, punch and tail, must end within 300 ms." },
+    { t:"listen", q:"At 200 BPM, which kick loop has a tail that overlaps the next kick?", options:[{label:"Loop A", sound:{type:"kicks", bpm:200, n:6, p:K["Too long"]}},{label:"Loop B", sound:{type:"kicks", bpm:200, n:6, p:K.Frenchcore}}], a:0, why:"Loop A's kick lasts about 500 ms, longer than the 300 ms beat, so each new kick starts while the old one is still ringing." },
+    { t:"mcq", q:"Your kick loop sounds smeared and clicks at every new kick. Likely cause?", options:["The tail is longer than one beat","The tail is tuned too low","The click layer is too quiet","The project is in Song mode"], a:0, why:"When the tail lasts longer than the beat, the next kick cuts it off or stacks on it: smearing and clicks." },
+    { t:"tf", q:"A tail can change pitch during a track to follow the chords.", a:true, why:"Producers often automate or sequence the tail pitch so the kick plays the bassline." }
+  ]}
+]},
+{ id:"u5", title:"Groove, bass and sidechain", desc:"The full loop, percussion, and ducking with Fruity Limiter.", color:"#2fd0c0", lessons:[
+  { id:"u5l1", title:"Build the groove", items:[
+    { t:"learn", title:"Kick, bass, clap, hats", body:`<p>A frenchcore loop at its simplest:</p>
+      <ul><li><b>Kick</b> on every beat: steps 1, 5, 9, 13.</li>
+      <li><b>Offbeat bass</b> between: steps 3, 7, 11, 15.</li>
+      <li><b>Clap or snare</b> on beats 2 and 4: steps 5 and 13.</li>
+      <li><b>Hats</b> to fill (offbeats, or every step for energy).</li></ul>
+      <p>This is a starting point, not the only groove. Listen to tracks you like and copy their patterns into the Beat Lab.</p>`,
+      demos:[{label:"Hear the full groove", sound:{type:"loop", bpm:200, bars:2, pattern:FC_GROOVE, kick:K.Frenchcore}}] },
+    { t:"mcq", q:"In a 16-step bar, which step is beat 2?", options:["Step 5","Step 2","Step 4","Step 9"], a:0, why:"Beat 1 = step 1, beat 2 = step 5, beat 3 = step 9, beat 4 = step 13." },
+    { t:"seq", q:"Add a clap on beats 2 and 4 to this groove.", rows:["kick","bass","clap"], init:{kick:[0,4,8,12], bass:[2,6,10,14]}, lock:["kick","bass"], target:{kick:[0,4,8,12], bass:[2,6,10,14], clap:[4,12]}, bpm:200, why:"Beats 2 and 4 are steps 5 and 13." },
+    { t:"seq", q:"Program the whole groove from scratch: kick on the beats, bass on the offbeats.", rows:["kick","bass"], target:{kick:[0,4,8,12], bass:[2,6,10,14]}, bpm:200, why:"Kick: 1, 5, 9, 13. Bass: 3, 7, 11, 15." }
+  ]},
+  { id:"u5l2", title:"Sidechain in FL Studio", items:[
+    { t:"learn", title:"Ducking with Fruity Limiter", body:`<p><b>Sidechain compression</b> lets one sound control the volume of another. Here, the kick makes the bass (or a pad, or a reverb) duck, so the kick always has room.</p>
+      <p>In FL Studio:</p>
+      <ul><li>Select the <b>kick's</b> Mixer track.</li>
+      <li>On the <b>bass</b> Mixer track, right-click the send arrow at the bottom and choose <b>Sidechain to this track</b>.</li>
+      <li>Load <b>Fruity Limiter</b> on the bass track and switch it to <b>COMP</b>.</li>
+      <li>Set the <b>SIDECHAIN</b> selector to the input number (1).</li>
+      <li>Lower the threshold, raise the ratio, then set the release so the bass comes back in time for the offbeat.</li></ul>
+      <p>The compressor now reacts to the kick instead of to the bass itself.</p>` },
+    { t:"order", q:"Order the sidechain setup.", items:["Select the kick's Mixer track","Right-click the send arrow on the bass track: Sidechain to this track","Load Fruity Limiter on the bass track","Switch Fruity Limiter to COMP mode","Set the SIDECHAIN input to 1","Adjust threshold, ratio and release by ear"], why:"Routing first (source selected, send set as sidechain), then the compressor and its sidechain input, then the settings." },
+    { t:"mcq", q:"Which Fruity Limiter mode do you use for sidechain compression?", options:["COMP","LIMIT","NOISE GATE","Any, it doesn't matter"], a:0, why:"The sidechain input is set in the compressor (COMP) section." },
+    { t:"tf", q:"For the sidechain send, you select the kick track and right-click the send on the bass track.", a:true, why:"Select the source (kick), then right-click the send control on the destination (the track with Fruity Limiter)." },
+    { t:"mcq", q:"The bass comes back too late and misses the offbeat. Which compressor setting do you shorten?", options:["Release","Threshold","Ceiling","Attack of the kick"], a:0, why:"Release is how fast the compressor lets go. At 200 BPM the offbeat comes 150 ms after the kick, so the bass must recover before that." }
+  ]}
+]},
+{ id:"u6", title:"Arrangement", desc:"Intro, break, build-up, drop. Rolls and automation.", color:"#ff7ab6", lessons:[
+  { id:"u6l1", title:"Shape of a track", items:[
+    { t:"learn", title:"A common template", body:`<p>Many frenchcore tracks follow a shape like this (a template, not a rule):</p>
+      <ul><li><b>Intro</b>: often kick-led and simple, so a DJ can mix it in.</li>
+      <li><b>Break</b> (breakdown): the kick stops; melody, vocals, atmosphere. Modern frenchcore, Dr. Peacock and Sefa for example, is known for melodic, cinematic breaks.</li>
+      <li><b>Build-up</b>: risers, filter sweeps, a kick or snare roll speeding up.</li>
+      <li><b>Drop</b>: kick, offbeat bass and lead at full power.</li>
+      <li>Second break, second build-up, second drop, often with a twist.</li>
+      <li><b>Outro</b>: DJ-friendly again.</li></ul>
+      <p>Each section is usually 8, 16 or 32 bars.</p>` },
+    { t:"order", q:"Put these sections in a typical order.", items:["Intro","Break","Build-up","Drop","Outro"], why:"Intro, then break (emotion), build-up (tension), drop (release), and an outro to mix out." },
+    { t:"mcq", q:"Which section usually has no kick?", options:["Break","Drop","Intro","Every section has a kick"], a:0, why:"The break removes the kick to bring out melody and create contrast with the drop." },
+    { t:"mcq", q:"How does a typical kick roll accelerate in a build-up?", options:["Quarter notes → eighths → sixteenths","Sixteenths → eighths → quarters","It stays on quarter notes","Random steps"], a:0, why:"Doubling the note rate builds tension right up to the drop." },
+    { t:"tf", q:"A short silence just before the drop can make the drop hit harder.", a:true, why:"A gap resets the ear. It's a very common trick in hard dance." }
+  ]},
+  { id:"u6l2", title:"Rolls and automation", items:[
+    { t:"learn", title:"Make it rise", body:`<p>A <b>roll</b> repeats the kick (or snare) faster and faster. In the Channel Rack you can program it step by step: eighths first (every 2 steps), then sixteenths (every step).</p>
+      <p><b>Automation</b> moves a knob over time. In FL Studio, right-click almost any knob and choose <b>Create automation clip</b>. A clip appears in the Playlist, and you draw the curve.</p>
+      <p>Common build-up automation: filter cutoff opening, volume rising, pitch of a riser going up.</p>`,
+      demos:[{label:"Hear a one-bar roll", sound:{type:"loop", bpm:200, bars:2, pattern:{kick:[0,2,4,6,8,9,10,11,12,13,14,15]}, kick:Object.assign({}, K.Frenchcore, {tail:0.05})}}] },
+    { t:"seq", q:"Program one bar of roll: eighths in the first half (steps 1, 3, 5, 7), then every step from 9 to 16.", rows:["kick"], target:{kick:[0,2,4,6,8,9,10,11,12,13,14,15]}, bpm:200, kick:Object.assign({}, K.Frenchcore, {tail:0.05}), why:"First half: every other step. Second half: every step." },
+    { t:"mcq", q:"How do you create an automation clip for a knob in FL Studio?", options:["Right-click the knob → Create automation clip","Double-click the Playlist","Press F9 twice","Drag the knob into the Browser"], a:0, why:"The right-click menu of a knob has “Create automation clip”." },
+    { t:"tf", q:"Automation clips appear in the Playlist, where you can draw their curve.", a:true, why:"An automation clip lives in the Playlist like any other clip, so you can place and shape it in time." }
+  ]}
+]},
+{ id:"u7", title:"Remixing into frenchcore", desc:"Tempo maths, stems, rebuilding the song, and the rights question.", color:"#7fd35c", lessons:[
+  { id:"u7l1", title:"Prepare the original", items:[
+    { t:"learn", title:"BPM, key, material", body:`<p>Before you remix, find out three things:</p>
+      <ul><li><b>Tempo</b>: tap it or look it up, then check it against the grid.</li>
+      <li><b>Key</b>: find the root note by ear on the Piano Roll, or use a key-detection tool. Your kick tail and bass will follow it.</li>
+      <li><b>Material</b>: official stems or an acapella are best. Otherwise FL Studio 21.2 and later has <b>Stem Separation</b>, which splits a song into drums, bass, instruments and vocals. Image-Line said it needs an internet connection. Separated stems can contain artefacts.</li></ul>
+      <p><b>Tempo relationships</b> matter most. A 100 BPM song fits a 200 BPM project with no stretch at all: each original beat lasts exactly two of yours (double-time).</p>
+      <p>If you speed audio up by <b>resampling</b> (pitch follows speed, like a turntable), the pitch shift in semitones is 12 × log2(new ÷ old). <b>Time-stretching</b> keeps the pitch but can add artefacts, more as the change gets bigger.</p>` },
+    { t:"mcq", q:"The original song is 100 BPM. Which project tempo fits it without any stretching?", options:["200 BPM","180 BPM","150 BPM","210 BPM"], a:0, why:"200 is exactly double. One original beat = two frenchcore beats, so everything lines up." },
+    { t:"num", q:"You speed a 150 BPM song up to 200 BPM by resampling. By how many semitones does the pitch rise? (round to whole)", a:5, tol:0.5, unit:"semitones", why:"12 × log2(200 ÷ 150) ≈ 4.98, so about 5 semitones. Use the Remix planner in Tools to check other tempos." },
+    { t:"num", q:"And from 100 to 200 BPM by resampling?", a:12, unit:"semitones", why:"Doubling the speed doubles the frequency: one octave, 12 semitones." },
+    { t:"tf", q:"Time-stretching a vocal from 120 to 200 BPM keeps it perfectly clean.", a:false, why:"Big stretches (here +67%) usually add artefacts. A half-time approach (stretch to 100 BPM, a −17% change) is often cleaner." },
+    { t:"mcq", q:"What does FL Studio's Stem Separation split a song into?", options:["Drums, bass, instruments, vocals","Left and right channels","Intro, break, drop","Kick, snare, hats"], a:0, why:"FL Studio 21.2 introduced separation into drum, bass, instrument and vocal stems." }
+  ]},
+  { id:"u7l2", title:"Make it frenchcore", items:[
+    { t:"learn", title:"Rebuild, don't just paste", body:`<p>Strategies that work:</p>
+      <ul><li><b>Half-time vocal</b>: bring the vocal to half your tempo (100 BPM for a 200 BPM project). One original bar then lasts two of your bars, and the vocal keeps its natural phrasing over your fast kick.</li>
+      <li><b>Recreate the melody</b> in the Piano Roll with your own synth. It's cleaner than a separated stem, you can change the chords, and you control the sound.</li>
+      <li><b>Chop the hook</b>: slice a vocal phrase (Fruity Slicer or Slicex) and replay it as a rhythm.</li>
+      <li><b>Tune the kick tail</b> to the song's key.</li>
+      <li>Put the hook in the <b>break</b>, build up, then <b>drop</b> on the offbeat-bass groove.</li></ul>` },
+    { t:"mcq", q:"Your vocal plays at 100 BPM inside a 200 BPM project. One bar of the original lasts how many project bars?", options:["2","1","4","0.5"], a:0, why:"At half the tempo, everything is twice as long in your grid." },
+    { t:"mcq", q:"Why rebuild the melody in the Piano Roll instead of using the separated instrument stem?", options:["It's clean, editable and free of separation artefacts","FL Studio cannot play stems","Stems are always out of tune","The Piano Roll makes it louder"], a:0, why:"MIDI notes can be re-voiced, re-harmonised and played by any synth, with no artefacts." },
+    { t:"tf", q:"The song is in C minor. Tuning your kick tail to C is a safe choice.", a:true, why:"The root note of the key is always a safe home for the bass and the tail." },
+    { t:"order", q:"Order a remix workflow.", items:["Find the tempo and key of the original","Get the material: stems, acapella or Stem Separation","Bring the vocal to your tempo (or half of it)","Recreate the melody in the Piano Roll","Build the kick and bass in the song's key","Arrange: intro, break with the hook, build-up, drop"], why:"Analyse, gather, align, rebuild, then arrange." }
+  ]},
+  { id:"u7l3", title:"Rights and releasing", items:[
+    { t:"learn", title:"Before you upload", body:`<p>A remix uses someone else's copyrighted recording and composition. In general:</p>
+      <ul><li>To <b>release</b> a remix (streaming, sale), you need permission from the rights holders: the label and the publisher. Official remix contests and licensed stems are a legal way in.</li>
+      <li>Unofficial remixes (“bootlegs” or “edits”) are common in DJ culture, but uploads can be blocked, taken down or monetised by the rights holder (YouTube's Content ID, for example).</li>
+      <li>Crediting the original artist does <b>not</b> give you permission.</li></ul>
+      <p>Making remixes on your own computer to learn is a different situation from publishing them; the risk comes with distribution.</p>
+      <p class="note">This is general information, not legal advice. Rules differ between countries and platforms.</p>` },
+    { t:"tf", q:"Writing “original by Artist X” in the title makes it legal to publish a remix.", a:false, why:"Credit isn't permission. You need a licence from the rights holders." },
+    { t:"mcq", q:"What is the safest way to release a frenchcore remix commercially?", options:["Get permission from the rights holders, or enter an official remix contest","Pitch the song up so it isn't recognised","Use only 30 seconds of the original","Upload it as a free download"], a:0, why:"Only a licence or an official programme gives you the right. Pitching or shortening the sample doesn't." },
+    { t:"tf", q:"A platform can take down or claim an unofficial remix even if it's free.", a:true, why:"Rights holders can claim or remove uses of their music whether or not you charge money." }
+  ]}
+]},
+{ id:"u8", title:"Mix and loudness", desc:"Gain staging, mono low end, the master chain, your ears.", color:"#f4f1fb", lessons:[
+  { id:"u8l1", title:"Mixing around the kick", items:[
+    { t:"learn", title:"The kick is king", body:`<p>In hardcore the <b>kick is the loudest element</b>. Mix everything else around it.</p>
+      <ul><li><b>Headroom</b>: keep insert tracks and the Master out of the red before your final limiter. 0 dBFS is the digital ceiling.</li>
+      <li><b>Mono low end</b>: keep kick and sub centred. Wide sub gets weaker when summed to mono on club systems.</li>
+      <li><b>Reference tracks</b>: compare with a professional frenchcore track at the <b>same loudness</b>. Louder always sounds “better” at first, so matching levels keeps you honest.</li>
+      <li><b>Protect your ears</b>: work at moderate volume and take breaks. Distorted music at 200 BPM is tiring, and hearing damage is permanent.</li></ul>` },
+    { t:"mcq", q:"Which element is usually the loudest in a frenchcore mix?", options:["The kick","The lead","The hats","The vocal"], a:0, why:"The genre is built around the kick, and the mix reflects that." },
+    { t:"tf", q:"Sub frequencies should be spread wide in stereo for a bigger sound.", a:false, why:"Keep the sub in mono. Wide low end loses power when summed to mono, as on many club systems." },
+    { t:"mcq", q:"Why match loudness when comparing your track with a reference?", options:["Louder sounds better, which hides real differences","FL Studio requires it","It changes the tempo","It's only for mastering engineers"], a:0, why:"The ear prefers the louder version. Match levels to compare tone and balance fairly." },
+    { t:"tf", q:"A red clip indicator on the Master meter means the signal has gone over 0 dBFS.", a:true, why:"Above 0 dBFS a fixed-point output clips. Leave headroom before the final limiter." }
+  ]},
+  { id:"u8l2", title:"Master chain basics", items:[
+    { t:"learn", title:"A simple master", body:`<p>A simple starting chain on the Master track:</p>
+      <ul><li><b>EQ</b> (Fruity Parametric EQ 2): small, gentle corrections.</li>
+      <li><b>Soft clipper</b> (Fruity Soft Clipper): shaves peaks so the limiter works less.</li>
+      <li><b>Limiter</b> (Fruity Limiter) <b>last</b>, with its ceiling a little below 0 dB.</li></ul>
+      <p>Hardcore masters are very loud, but most of that loudness comes from the kick design and the arrangement, not from pushing the limiter. Crush the limiter and the kick loses its punch.</p>` },
+    { t:"order", q:"Order this master chain from first to last.", items:["Fruity Parametric EQ 2","Fruity Soft Clipper","Fruity Limiter"], why:"Correct, then shave peaks, then limit at the very end." },
+    { t:"mcq", q:"Which plugin usually goes last on the Master?", options:["Limiter","Reverb","EQ","Distortion"], a:0, why:"The limiter sets the final ceiling, so nothing should come after it." },
+    { t:"tf", q:"Limiting harder always makes the kick punchier.", a:false, why:"Heavy limiting flattens transients, and the punch lives in the transient." }
+  ]}
+]}
+];
+const ALL_LESSONS = []; UNITS.forEach((u, ui) => u.lessons.forEach((l, li) => { l.unit = u; l.ui = ui; l.li = li; ALL_LESSONS.push(l); }));
+
+const GLOSSARY = [
+  ["Acapella","A vocal recording with no instruments. The best raw material for a remix."],
+  ["Automation clip","A clip in FL Studio's Playlist that moves a knob over time. Right-click a knob → Create automation clip."],
+  ["Bar","A group of beats. In 4/4, one bar is 4 beats, which is 16 steps in the Channel Rack."],
+  ["Beat","One pulse of the tempo, a quarter note in 4/4. At 200 BPM it lasts 300 ms."],
+  ["Bootleg","An unofficial remix made without permission from the rights holders."],
+  ["BPM","Beats per minute, the tempo. ms per beat = 60000 ÷ BPM."],
+  ["Break","A section without kick, focused on melody, vocals and atmosphere."],
+  ["Build-up","The section before a drop that raises tension: risers, filter sweeps, rolls."],
+  ["Channel Rack","FL Studio's list of instruments and samples, with the step sequencer (F6)."],
+  ["Click / transient","The first few milliseconds of a sound. In a kick, the bright attack."],
+  ["Clipping","Cutting off the peaks of a wave. Hard clipping cuts flat; soft clipping rounds."],
+  ["dBFS","Decibels relative to full scale. 0 dBFS is the top of the digital range."],
+  ["Distortion","Changing the shape of a wave so that it gains harmonics."],
+  ["Double-time","Playing at twice the original tempo: 100 BPM material in a 200 BPM project."],
+  ["Drop","The peak section where the full kick, bass and lead come in."],
+  ["Four-on-the-floor","A kick on every beat: steps 1, 5, 9 and 13."],
+  ["Frenchcore","A hardcore style around 200 BPM with a distorted kick on every beat and an offbeat bass. Early roots in France in the 1990s (Micropoint, Radium); a melodic modern wave led by artists such as Dr. Peacock and Sefa."],
+  ["Half-time","Playing material at half your project tempo, so one original beat lasts two of yours."],
+  ["Harmonics","Frequencies at whole-number multiples of a fundamental. Distortion adds them."],
+  ["Headroom","The space between your loudest peak and 0 dBFS."],
+  ["Kick roll","Repeated kicks at an accelerating rate, used in fills and build-ups."],
+  ["Layering","Stacking several sounds (punch, tail, click) to build one kick."],
+  ["Limiter","A processor that stops the signal from going over a ceiling."],
+  ["Mixer insert","A Mixer track that receives one or more channels and holds their effects."],
+  ["Offbeat","The “and” between beats: steps 3, 7, 11, 15 in a 16-step bar."],
+  ["Pattern","A clip of notes and steps in FL Studio, placed in the Playlist."],
+  ["Phase cancellation","When two similar waves are out of step and partly cancel each other."],
+  ["Piano Roll","FL Studio's note editor (F7)."],
+  ["Pitch envelope","A fast change of pitch over time. In a kick, the drop from high to the base note."],
+  ["Playlist","FL Studio's arrangement window (F5)."],
+  ["Punch","The part of a kick you feel, made by the fast pitch drop."],
+  ["Resampling","Changing speed and pitch together, like a turntable. +12 semitones = double speed."],
+  ["Sidechain","Using one signal (the kick) to control a processor on another (the bass)."],
+  ["Soft clipper","A plugin that rounds peaks gently. Fruity Soft Clipper in FL Studio."],
+  ["Stem","A group of tracks rendered together: drums, bass, instruments, vocals."],
+  ["Stem Separation","FL Studio 21.2+ feature that splits a mixed song into stems."],
+  ["Step","One cell of the step sequencer, a sixteenth note."],
+  ["Tail","The sustained, tuned part of a kick after the punch."],
+  ["Time-stretching","Changing tempo without changing pitch."],
+  ["Waveshaper","A distortion that maps input level to output level with a curve."]
+];
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+const KEY = "frenchcore-academy-v1";
+const REGEN_MS = 20 * 60 * 1000;
+const defaults = () => ({ xp:0, streak:0, lastDay:null, todayXP:0, today:null, hearts:5, heartTs:Date.now(), done:{}, goal:30, explore:false, unlimited:false, vol:0.55, kick:null });
+let S = defaults();
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(defaults(), JSON.parse(raw)); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+const dayKey = d => d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+const todayKey = () => dayKey(new Date());
+const yesterdayKey = () => { const d = new Date(); d.setDate(d.getDate() - 1); return dayKey(d); };
+function rollDay() { if (S.today !== todayKey()) { S.today = todayKey(); S.todayXP = 0; } }
+function regen() {
+  const now = Date.now();
+  if (S.hearts >= 5) { S.hearts = 5; S.heartTs = now; return; }
+  const n = Math.floor((now - S.heartTs) / REGEN_MS);
+  if (n > 0) { S.hearts = Math.min(5, S.hearts + n); S.heartTs = S.hearts >= 5 ? now : S.heartTs + n * REGEN_MS; }
+}
+function streakShown() { return (S.lastDay === todayKey() || S.lastDay === yesterdayKey()) ? S.streak : 0; }
+function addXP(n) {
+  rollDay(); S.xp += n; S.todayXP += n;
+  const t = todayKey();
+  if (S.lastDay !== t) { S.streak = S.lastDay === yesterdayKey() ? S.streak + 1 : 1; S.lastDay = t; }
+  save();
+}
+let LAB = kickParams(S.kick || KICK_PRESETS.Frenchcore);
+
+/* =====================================================================
+   HELPERS
+   ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function shuffledNot(n) { const id = [...Array(n).keys()]; if (n < 2) return id; let s; do { s = shuffle(id); } while (s.every((v, i) => v === i)); return s; }
+let toastT = null;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+const ICON = {
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>',
+  stop: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 6.9 7.5.7-5.7 5 1.7 7.4L12 18l-6.5 4 1.7-7.4-5.7-5 7.5-.7z"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  wave: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M2 12h3l2-7 3 14 3-10 2 6 2-3h5"/></svg>'
+};
+const ROW_COLOR = { kick:"var(--red)", bass:"var(--blue)", clap:"var(--amber)", hat:"#2fd0c0" };
+const fmtSteps = arr => arr.map(s => s + 1).join(", ");
+
+/* =====================================================================
+   PATH VIEW
+   ===================================================================== */
+function isUnlocked(i) { return S.explore || i === 0 || !!S.done[ALL_LESSONS[i - 1].id]; }
+function currentIndex() { const i = ALL_LESSONS.findIndex(l => !S.done[l.id]); return i; }
+function renderPath() {
+  const cur = currentIndex();
+  const off = [0, 46, 64, 46, 0, -46, -64, -46];
+  let k = 0;
+  $("#path").innerHTML = UNITS.map((u, ui) => `
+    <section class="unit" style="--uc:${u.color}">
+      <div class="unit-head"><div class="num">${ui + 1}</div><div><h3>${u.title}</h3><p>${u.desc}</p></div></div>
+      <div class="nodes">${u.lessons.map(l => {
+        const gi = ALL_LESSONS.indexOf(l), done = S.done[l.id], open = isUnlocked(gi);
+        const cls = done ? "done" : (gi === cur ? "current" : (open ? "" : "locked"));
+        const stars = done ? "★".repeat(done.stars) + "☆".repeat(3 - done.stars) : "";
+        const dx = off[(k++) % off.length];
+        return `<button class="node ${cls}" data-lesson="${gi}" style="--dx:${dx}px" aria-label="${l.title}${done ? ", completed" : open ? "" : ", locked"}">
+          <span class="pad">${done ? ICON.check : open ? ICON.star : ICON.lock}</span>
+          <span class="lbl">${l.title}</span><span class="stars">${stars}</span></button>`;
+      }).join("")}</div>
+    </section>`).join("");
+  $$("#path .node").forEach(b => b.onclick = () => {
+    const i = +b.dataset.lesson;
+    if (!isUnlocked(i)) { toast("Finish the previous lesson first, or turn on Explore mode in Settings."); return; }
+    startLesson(ALL_LESSONS[i]);
+  });
+}
+function renderStats() {
+  regen(); rollDay();
+  $("#sStreak").textContent = streakShown();
+  $("#sXp").textContent = S.xp;
+  $("#sHearts").textContent = S.unlimited ? "∞" : S.hearts;
+  const pct = Math.min(1, S.todayXP / S.goal);
+  $("#ringArc").setAttribute("stroke-dashoffset", String(157 * (1 - pct)));
+  $("#todayTitle").textContent = pct >= 1 ? "Goal reached" : "Daily goal";
+  $("#todayText").textContent = `${S.todayXP} / ${S.goal} XP today · ${S.unlimited ? "unlimited" : S.hearts} hearts`;
+  const cur = currentIndex();
+  const doneCount = Object.keys(S.done).length;
+  $("#continueBtn").textContent = cur === -1 ? "Practice" : (doneCount ? "Continue" : "Start lesson 1");
+}
+
+/* =====================================================================
+   LESSON ENGINE
+   ===================================================================== */
+let L = null;
+const KIND = { learn:"New idea", mcq:"Choose the answer", tf:"True or false", num:"Work it out", order:"Put in order", match:"Match the pairs", listen:"Listen", seq:"Program the beat" };
+
+function startLesson(lesson, practiceItems) {
+  regen();
+  if (!practiceItems && !S.unlimited && S.hearts <= 0) { outOfHearts(); return; }
+  const items = practiceItems || lesson.items.slice();
+  L = { lesson, practice: !!practiceItems, queue: items.slice(), pos: 0, total: items.length, solved: 0, mistakes: 0, state: "answer", R: null };
+  $("#lesson").style.setProperty("--uc", lesson ? lesson.unit.color : "var(--blue)");
+  $("#lesson").hidden = false; document.body.style.overflow = "hidden";
+  showItem();
+}
+function closeLesson() {
+  A.stopAll(); L = null; $("#lesson").hidden = true; document.body.style.overflow = "";
+  renderPath(); renderStats();
+}
+function setFoot(state, title, text, label, enabled) {
+  const f = $("#lsFoot"); f.className = "ls-foot" + (state ? " " + state : "");
+  $("#fbTitle").textContent = title || ""; $("#fbText").innerHTML = text || "";
+  const b = $("#lsMain"); b.textContent = label; b.disabled = !enabled;
+  b.className = "btn " + (state === "bad" ? "red" : "good");
+}
+function updateTop() {
+  $("#lsBar").style.width = (100 * L.solved / L.total) + "%";
+  $("#lsHearts span").textContent = (S.unlimited || L.practice) ? "∞" : S.hearts;
+}
+function showItem() {
+  A.stopAll();
+  updateTop();
+  const item = L.queue[L.pos];
+  const box = $("#lsInner"); box.innerHTML = ""; $("#lsBody").scrollTop = 0;
+  L.state = "answer";
+  if (item.t === "learn") {
+    box.innerHTML = `<div class="learn"><p class="kind">${KIND.learn}</p><h2>${item.title}</h2><div class="txt">${item.body}</div>${item.demos ? `<div class="demos">${item.demos.map((d, i) => `<button class="btn small primary" data-demo="${i}">${ICON.play.replace('<svg', '<svg width="14" height="14" style="vertical-align:-2px;margin-right:6px"')}${d.label}</button>`).join("")}</div>` : ""}</div>`;
+    $$("[data-demo]", box).forEach(b => b.onclick = () => playSpec(item.demos[+b.dataset.demo].sound));
+    L.R = null;
+    setFoot("", "", "", "Continue", true);
+    return;
+  }
+  setFoot("", "", "", "Check", false);
+  L.R = RENDER[item.t](item, box, ok => { if (L && L.state === "answer") $("#lsMain").disabled = !ok; });
+}
+function mainAction() {
+  if (!L) return;
+  const item = L.queue[L.pos];
+  if (L.state === "end") { closeLesson(); return; }
+  if (L.state === "hearts") { closeLesson(); return; }
+  if (item && item.t === "learn") { L.solved++; next(); return; }
+  if (L.state === "answer") {
+    if ($("#lsMain").disabled) return;
+    A.stopAll();
+    const ok = L.R.check();
+    L.state = "feedback";
+    if (ok) {
+      L.solved++; updateTop();
+      setFoot("good", pick(["Nice!", "Correct!", "Locked in.", "On beat."]), item.why || "", "Continue", true);
+    } else {
+      L.mistakes++;
+      if (!L.practice && !S.unlimited) { S.hearts = Math.max(0, S.hearts - 1); if (S.hearts === 4) S.heartTs = Date.now(); save(); }
+      L.queue.push(item);
+      updateTop();
+      setFoot("bad", "Not quite", `<b>Answer:</b> ${L.R.answer()}<br>${item.why || ""}`, "Got it", true);
+    }
+    return;
+  }
+  if (L.state === "feedback") next();
+}
+const pick = a => a[Math.floor(Math.random() * a.length)];
+function next() {
+  L.pos++;
+  if (!L.practice && !S.unlimited && S.hearts <= 0) { outOfHearts(); return; }
+  if (L.pos >= L.queue.length) { finish(); return; }
+  showItem();
+}
+function outOfHearts() {
+  if (!L) { L = { lesson: null, practice: false, queue: [], pos: 0, total: 1, solved: 0, mistakes: 0 }; $("#lesson").hidden = false; document.body.style.overflow = "hidden"; }
+  L.state = "hearts"; A.stopAll();
+  const mins = Math.ceil((REGEN_MS - (Date.now() - S.heartTs)) / 60000);
+  const canPractice = Object.keys(S.done).length > 0;
+  $("#lsInner").innerHTML = `<div class="endcard"><h2>Out of hearts</h2><p class="lead">A heart comes back every 20 minutes (next one in about ${Math.max(1, mins)} min). Finishing a practice session also gives one back. Or switch on Unlimited hearts in Settings.</p>${canPractice ? '<button class="btn primary" id="goPractice">Practice to earn a heart</button>' : ""}</div>`;
+  if (canPractice) $("#goPractice").onclick = () => { L = null; startPractice(); };
+  setFoot("", "", "", "Back to the path", true);
+  updateTop();
+}
+function finish() {
+  L.state = "end"; A.stopAll();
+  const clean = L.mistakes === 0;
+  let xp, stars = clean ? 3 : (L.mistakes <= 2 ? 2 : 1);
+  if (L.practice) { xp = 5 + (clean ? 3 : 0); if (S.hearts < 5) S.hearts++; }
+  else {
+    xp = 10 + (clean ? 5 : 0);
+    const prev = S.done[L.lesson.id];
+    S.done[L.lesson.id] = { stars: Math.max(stars, prev ? prev.stars : 0), at: Date.now() };
+  }
+  addXP(xp);
+  const acc = Math.round(100 * L.total / (L.total + L.mistakes));
+  $("#lsBar").style.width = "100%";
+  $("#lsInner").innerHTML = `<div class="endcard">
+    <p class="kind">${L.practice ? "Practice complete" : L.lesson.unit.title}</p>
+    <h2>${clean ? "Perfect!" : "Lesson done"}</h2>
+    <p class="lead">${L.practice ? "Review keeps the basics sharp. You earned a heart back." : L.lesson.title}</p>
+    <div class="endstats"><div class="es"><b>+${xp}</b><span>XP</span></div><div class="es"><b>${acc}%</b><span>Accuracy</span></div><div class="es"><b style="color:var(--amber)">${"★".repeat(stars)}${"☆".repeat(3 - stars)}</b><span>Stars</span></div></div>
+    ${S.todayXP >= S.goal && S.todayXP - xp < S.goal ? '<p style="color:var(--amber);font-weight:700">Daily goal reached. Streak: ' + S.streak + ' day' + (S.streak > 1 ? "s" : "") + '.</p>' : ""}
+  </div>`;
+  setFoot("", "", "", "Continue", true);
+  save();
+}
+function startPractice() {
+  const done = ALL_LESSONS.filter(l => S.done[l.id]);
+  if (!done.length) { toast("Finish a lesson first."); return; }
+  const pool = shuffle(done.flatMap(l => l.items.filter(i => i.t !== "learn").map(i => ({ i, l }))));
+  const items = pool.slice(0, 8).map(x => x.i);
+  startLesson(Object.assign({}, done[0], { unit: { color: "var(--amber)", title: "Practice" } }), items);
+}
+
+function qHead(item) { return `<p class="kind">${KIND[item.t]}</p><h2 class="q">${item.q}</h2>`; }
+const RENDER = {
+  mcq(item, box, ready, tf) {
+    const order = tf ? [0, 1] : shuffle(item.options.map((_, i) => i));
+    box.innerHTML = qHead(item) + `<div class="opts ${tf ? "tfgrid" : ""}">${order.map((i, k) => `<button class="opt" data-i="${i}">${tf ? "" : `<span class="key">${k + 1}</span>`}<span>${item.options[i]}</span></button>`).join("")}</div>`;
+    let sel = null; const btns = $$(".opt", box);
+    const choose = b => { btns.forEach(x => x.classList.remove("sel")); b.classList.add("sel"); sel = +b.dataset.i; ready(true); };
+    btns.forEach(b => b.onclick = () => { if (L.state === "answer") choose(b); });
+    return {
+      key(n) { if (btns[n - 1]) choose(btns[n - 1]); },
+      check() { const ok = sel === item.a; btns.forEach(b => { const i = +b.dataset.i; if (i === item.a) b.classList.add("right"); else if (i === sel) b.classList.add("wrong"); }); return ok; },
+      answer: () => item.options[item.a]
+    };
+  },
+  tf(item, box, ready) {
+    return RENDER.mcq(Object.assign({}, item, { options: ["True", "False"], a: item.a ? 0 : 1, t: "tf" }), box, ready, true);
+  },
+  num(item, box, ready) {
+    box.innerHTML = qHead(item) + `<div class="numrow"><input id="numIn" type="text" inputmode="decimal" autocomplete="off" aria-label="Your answer"><span class="unit">${item.unit || ""}</span></div>`;
+    const inp = $("#numIn", box);
+    const val = () => parseFloat(inp.value.replace(",", ".").replace(/[^\d.\-]/g, ""));
+    inp.oninput = () => ready(!isNaN(val()));
+    inp.onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); mainAction(); } };
+    setTimeout(() => inp.focus(), 50);
+    return { check() { inp.disabled = true; return Math.abs(val() - item.a) <= (item.tol || 0.0001); }, answer: () => item.a + " " + (item.unit || "") };
+  },
+  order(item, box, ready) {
+    const pool = shuffledNot(item.items.length); const placed = [];
+    box.innerHTML = qHead(item) + `<div class="zone" id="ozone"></div><div class="pool" id="opool"></div>`;
+    const draw = () => {
+      $("#ozone", box).innerHTML = placed.map((i, k) => `<button class="chip" data-p="${k}"><span class="n">${k + 1}</span><span>${item.items[i]}</span></button>`).join("");
+      $("#opool", box).innerHTML = pool.map(i => `<button class="chip ${placed.includes(i) ? "ghost" : ""}" data-i="${i}" ${placed.includes(i) ? 'tabindex="-1" aria-hidden="true"' : ""}><span>${item.items[i]}</span></button>`).join("");
+      $$("#ozone .chip", box).forEach(b => b.onclick = () => { if (L.state !== "answer") return; placed.splice(+b.dataset.p, 1); draw(); });
+      $$("#opool .chip", box).forEach(b => b.onclick = () => { if (L.state !== "answer") return; const i = +b.dataset.i; if (!placed.includes(i)) { placed.push(i); draw(); } });
+      ready(placed.length === item.items.length);
+    };
+    draw();
+    return { check: () => placed.every((v, k) => v === k), answer: () => "<br>" + item.items.map((s, k) => `${k + 1}. ${s}`).join("<br>") };
+  },
+  match(item, box, ready) {
+    const left = shuffle(item.pairs.map((_, i) => i)), right = shuffle(item.pairs.map((_, i) => i));
+    let selL = null, errors = 0, matched = 0;
+    box.innerHTML = qHead(item) + `<div class="matchgrid"><div class="col">${left.map(i => `<button class="mitem" data-side="l" data-i="${i}">${item.pairs[i][0]}</button>`).join("")}</div><div class="col">${right.map(i => `<button class="mitem" data-side="r" data-i="${i}">${item.pairs[i][1]}</button>`).join("")}</div></div>`;
+    $$(".mitem", box).forEach(b => b.onclick = () => {
+      if (L.state !== "answer" || b.classList.contains("done")) return;
+      const i = +b.dataset.i;
+      if (b.dataset.side === "l") { $$('.mitem[data-side="l"]', box).forEach(x => x.classList.remove("sel")); b.classList.add("sel"); selL = i; return; }
+      if (selL === null) { b.classList.add("shake"); setTimeout(() => b.classList.remove("shake"), 320); return; }
+      const lb = $(`.mitem[data-side="l"][data-i="${selL}"]`, box);
+      if (i === selL) { lb.classList.remove("sel"); lb.classList.add("done"); b.classList.add("done"); matched++; selL = null; if (matched === item.pairs.length) ready(true); }
+      else { errors++; [lb, b].forEach(x => { x.classList.add("shake"); setTimeout(() => x.classList.remove("shake"), 320); }); }
+    });
+    return { check: () => errors === 0, answer: () => `you matched them all, with ${errors} wrong attempt${errors > 1 ? "s" : ""}. ` + item.pairs.map(p => `${p[0]} = ${p[1]}`).join(" · ") };
+  },
+  listen(item, box, ready) {
+    box.innerHTML = qHead(item) + `<div class="lcards">${item.options.map((o, i) => `<div class="lcard" data-i="${i}"><button class="play" data-play="${i}" aria-label="Play ${o.label}">${ICON.play}</button><button class="pick" data-pick="${i}">${o.label}</button></div>`).join("")}</div><p class="explain">Tap the round buttons to listen as often as you like, then choose.</p>`;
+    let sel = null;
+    $$("[data-play]", box).forEach(b => b.onclick = () => playSpec(item.options[+b.dataset.play].sound));
+    $$("[data-pick]", box).forEach(b => b.onclick = () => { if (L.state !== "answer") return; sel = +b.dataset.pick; $$(".lcard", box).forEach(c => c.classList.toggle("sel", +c.dataset.i === sel)); ready(true); });
+    return {
+      key(n) { const b = $(`[data-pick="${n - 1}"]`, box); if (b) b.click(); },
+      check() { $$(".lcard", box).forEach(c => { const i = +c.dataset.i; if (i === item.a) c.classList.add("right"); else if (i === sel) c.classList.add("wrong"); }); return sel === item.a; },
+      answer: () => item.options[item.a].label
+    };
+  },
+  seq(item, box, ready) {
+    const state = {}; item.rows.forEach(r => state[r] = toGrid(item.init && item.init[r]));
+    box.innerHTML = qHead(item) + `<div class="seqwrap"><div class="seq" id="lgrid"></div></div><div class="seqctl"><button class="btn primary small" id="lplay">Play</button><button class="btn small" id="lclear">Clear</button><span class="explain" style="margin:0">${item.bpm} BPM · steps 1, 5, 9, 13 are the beats</span></div>`;
+    const grid = $("#lgrid", box);
+    const owner = { onStop() { const b = $("#lplay", box); if (b) b.textContent = "Play"; } };
+    drawGrid(grid, item.rows, state, item.lock || [], () => {});
+    ready(true);
+    $("#lplay", box).onclick = () => {
+      if (Seq.playing && Seq.owner === owner) { Seq.stop(); return; }
+      Seq.start(() => state, item.bpm, i => phGrid(grid, i), () => item.kick || LAB, owner);
+      $("#lplay", box).textContent = "Stop";
+    };
+    $("#lclear", box).onclick = () => { if (L.state !== "answer") return; item.rows.forEach(r => { if (!(item.lock || []).includes(r)) state[r] = toGrid([]); }); drawGrid(grid, item.rows, state, item.lock || [], () => {}); };
+    return {
+      check() {
+        $$(".cell", grid).forEach(c => c.disabled = true);
+        return Object.keys(item.target).every(r => { const t = toGrid(item.target[r]); return state[r].every((v, i) => v === t[i]); });
+      },
+      answer: () => Object.keys(item.target).map(r => `${r[0].toUpperCase() + r.slice(1)}: steps ${fmtSteps(item.target[r])}`).join(" · ")
+    };
+  }
+};
+
+function drawGrid(grid, rows, state, locked, onChange) {
+  grid.innerHTML = `<div class="seqnums"><span></span>${[...Array(16)].map((_, i) => `<span>${i + 1}</span>`).join("")}</div>` +
+    rows.map(r => `<div class="seqrow" style="--rc:${ROW_COLOR[r]}"><span class="rl">${r}</span>${state[r].map((on, i) => `<button class="cell ${Math.floor(i / 4) % 2 ? "alt" : ""} ${on ? "on" : ""}" data-r="${r}" data-s="${i}" aria-label="${r} step ${i + 1}" aria-pressed="${on}" ${locked.includes(r) ? "disabled" : ""}></button>`).join("")}</div>`).join("");
+  $$(".cell", grid).forEach(c => c.onclick = () => {
+    if (L && L.state !== "answer" && grid.id === "lgrid") return;
+    const r = c.dataset.r, s = +c.dataset.s; state[r][s] = !state[r][s];
+    c.classList.toggle("on", state[r][s]); c.setAttribute("aria-pressed", state[r][s]); onChange();
+  });
+}
+function phGrid(grid, i) { $$(".cell.ph", grid).forEach(c => c.classList.remove("ph")); if (i >= 0) $$(`.cell[data-s="${i}"]`, grid).forEach(c => c.classList.add("ph")); }
+
+/* =====================================================================
+   KICK LAB
+   ===================================================================== */
+const kLoopOwner = { onStop() { $("#kLoop").textContent = "Loop four-on-the-floor"; } };
+function initKickLab() {
+  const sel = $("#kNote");
+  for (let m = 24; m <= 40; m++) sel.insertAdjacentHTML("beforeend", `<option value="${m}">${noteName(m)} · ${midiHz(m).toFixed(1)} Hz</option>`);
+  $("#kPresets").innerHTML = Object.keys(KICK_PRESETS).map(n => `<button class="chipbtn" data-preset="${n}">${n}</button>`).join("");
+  $$("[data-preset]").forEach(b => b.onclick = () => { LAB = kickParams(KICK_PRESETS[b.dataset.preset]); LAB.bpm = +$("#kBpm").value || 200; syncKnobs(); kickChanged(true); });
+  const map = [["kNote", v => LAB.note = +v], ["kStart", v => LAB.start = +v], ["kDrop", v => LAB.drop = v / 1000], ["kTail", v => LAB.tail = v / 1000], ["kDrive", v => LAB.drive = v / 100], ["kClick", v => LAB.click = v / 100], ["kGlide", v => LAB.glide = v / 100], ["kBpm", v => LAB.bpm = +v]];
+  map.forEach(([id, f]) => $("#" + id).addEventListener("input", e => { f(e.target.value); LAB.pitch = midiHz(LAB.note); kickChanged(false); }));
+  map.forEach(([id]) => $("#" + id).addEventListener("change", () => { if (!Seq.playing) playSpec({ type: "kick", p: LAB }); }));
+  $("#kPlay").onclick = () => playSpec({ type: "kick", p: LAB });
+  $("#kLoop").onclick = () => {
+    if (Seq.playing && Seq.owner === kLoopOwner) { Seq.stop(); return; }
+    const pat = { kick: toGrid([0, 4, 8, 12]) };
+    Seq.start(() => pat, LAB.bpm || 200, null, () => LAB, kLoopOwner);
+    $("#kLoop").textContent = "Stop loop";
+  };
+  LAB.bpm = LAB.bpm || 200;
+  syncKnobs(); kickChanged(false);
+  window.addEventListener("resize", () => drawKick());
+}
+function syncKnobs() {
+  $("#kNote").value = LAB.note; $("#kStart").value = LAB.start; $("#kDrop").value = Math.round(LAB.drop * 1000);
+  $("#kTail").value = Math.round(LAB.tail * 1000); $("#kDrive").value = Math.round(LAB.drive * 100);
+  $("#kClick").value = Math.round(LAB.click * 100); $("#kGlide").value = Math.round(LAB.glide * 100); $("#kBpm").value = LAB.bpm || 200;
+}
+let kickTimer = null;
+function kickChanged(play) {
+  LAB.pitch = midiHz(LAB.note);
+  $("#kNoteO").textContent = `${noteName(LAB.note)}`;
+  $("#kStartO").textContent = `${LAB.start} Hz`;
+  $("#kDropO").textContent = `${Math.round(LAB.drop * 1000)} ms`;
+  $("#kTailO").textContent = `${Math.round(LAB.tail * 1000)} ms`;
+  $("#kDriveO").textContent = `${Math.round(LAB.drive * 100)}%`;
+  $("#kClickO").textContent = `${Math.round(LAB.click * 100)}%`;
+  $("#kGlideO").textContent = `${Math.round(LAB.glide * 100)}%`;
+  $("#kBpmO").textContent = `${LAB.bpm || 200} BPM`;
+  if (Seq.playing && Seq.owner === kLoopOwner) Seq.bpm = LAB.bpm || 200;
+  const total = Math.round((LAB.drop + LAB.tail) * 1000), beat = Math.round(60000 / (LAB.bpm || 200));
+  const fits = total <= beat;
+  $("#kExplain").innerHTML = `Kick length <b class="mono">${total} ms</b>; one beat at ${LAB.bpm || 200} BPM is <b class="mono">${beat} ms</b>. ${fits ? "The tail ends before the next kick." : `<span style="color:var(--red)">The tail is ${total - beat} ms too long: it will overlap the next kick.</span>`} Tail pitch ${noteName(LAB.note)} = ${LAB.pitch.toFixed(2)} Hz${LAB.drive > 0.2 ? `; distortion adds harmonics at ${(LAB.pitch * 2).toFixed(0)}, ${(LAB.pitch * 3).toFixed(0)}, ${(LAB.pitch * 4).toFixed(0)} Hz and up` : ""}.`;
+  S.kick = { note: LAB.note, start: LAB.start, drop: LAB.drop, tail: LAB.tail, drive: LAB.drive, click: LAB.click, glide: LAB.glide, bpm: LAB.bpm };
+  save();
+  clearTimeout(kickTimer); kickTimer = setTimeout(drawKick, 60);
+  if (play) playSpec({ type: "kick", p: LAB });
+}
+let lastWave = null;
+async function drawKick() {
+  const cv = $("#kickCanvas"); if (!cv || $("#view-labs").hidden) return;
+  try { lastWave = await renderKickWave(LAB); } catch (e) { lastWave = null; }
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = w * dpr; cv.height = h * dpr;
+  const g = cv.getContext("2d"); g.scale(dpr, dpr); g.clearRect(0, 0, w, h);
+  const cs = getComputedStyle(document.documentElement);
+  const col = n => cs.getPropertyValue(n).trim();
+  const beat = 60 / (LAB.bpm || 200);
+  const span = Math.max(0.45, beat * 1.3, LAB.drop + LAB.tail + 0.05);
+  const pad = 18, mid = (h - pad) / 2;
+  g.strokeStyle = col("--line"); g.lineWidth = 1; g.beginPath(); g.moveTo(0, mid); g.lineTo(w, mid); g.stroke();
+  g.fillStyle = col("--muted"); g.font = "10px " + col("--mono");
+  for (let ms = 0; ms <= span * 1000; ms += 100) { const x = ms / 1000 / span * w; g.fillRect(x, h - pad, 1, 4); g.fillText(ms + " ms", x + 3, h - 4); }
+  if (lastWave) {
+    const d = lastWave.data, sr = lastWave.sr;
+    g.fillStyle = col("--red");
+    for (let x = 0; x < w; x++) {
+      const a = Math.floor(x / w * span * sr), b = Math.floor((x + 1) / w * span * sr);
+      let mn = 0, mx = 0; for (let i = a; i < b && i < d.length; i++) { if (d[i] < mn) mn = d[i]; if (d[i] > mx) mx = d[i]; }
+      g.fillRect(x, mid - mx * (mid - 6), 1, Math.max(1, (mx - mn) * (mid - 6)));
+    }
+  }
+  const bx = beat / span * w;
+  g.strokeStyle = col("--amber"); g.setLineDash([5, 4]); g.beginPath(); g.moveTo(bx, 4); g.lineTo(bx, h - pad); g.stroke(); g.setLineDash([]);
+  g.fillStyle = col("--amber"); g.font = "11px " + col("--mono");
+  const lab = `next kick @ ${LAB.bpm || 200} BPM`; const tw = g.measureText(lab).width;
+  g.fillText(lab, bx + 6 + tw > w ? bx - tw - 6 : bx + 6, 14);
+}
+
+/* =====================================================================
+   BEAT LAB
+   ===================================================================== */
+const B = { rows: ["kick", "bass", "clap", "hat"], state: null };
+const BEAT_PRESETS = {
+  "Four-on-the-floor": { kick: [0, 4, 8, 12] },
+  "Frenchcore groove": FC_GROOVE,
+  "Roll build-up": { kick: [0, 2, 4, 6, 8, 9, 10, 11, 12, 13, 14, 15] },
+  "Clear": {}
+};
+const bOwner = { onStop() { $("#bPlay").textContent = "Play"; } };
+function initBeatLab() {
+  B.state = {}; B.rows.forEach(r => B.state[r] = toGrid(FC_GROOVE[r]));
+  drawGrid($("#bGrid"), B.rows, B.state, [], () => {});
+  $("#bPresets").innerHTML = Object.keys(BEAT_PRESETS).map(n => `<button class="chipbtn" data-bp="${n}">${n}</button>`).join("");
+  $$("[data-bp]").forEach(b => b.onclick = () => { const p = BEAT_PRESETS[b.dataset.bp]; B.rows.forEach(r => B.state[r] = toGrid(p[r])); drawGrid($("#bGrid"), B.rows, B.state, [], () => {}); });
+  $("#bBpm").oninput = e => { $("#bBpmO").textContent = e.target.value; if (Seq.playing && Seq.owner === bOwner) Seq.bpm = +e.target.value; };
+  $("#bPlay").onclick = () => {
+    if (Seq.playing && Seq.owner === bOwner) { Seq.stop(); return; }
+    Seq.start(() => B.state, +$("#bBpm").value, i => phGrid($("#bGrid"), i), () => LAB, bOwner);
+    $("#bPlay").textContent = "Stop";
+  };
+}
+
+/* =====================================================================
+   TOOLS
+   ===================================================================== */
+function num(v) { return parseFloat(String(v).replace(",", ".")); }
+function renderTempo() {
+  const bpm = num($("#tBpm").value);
+  if (!(bpm > 0 && bpm < 1000)) { $("#tTable").innerHTML = `<tr><td>Enter a tempo between 1 and 999 BPM.</td></tr>`; return; }
+  const beat = 60000 / bpm;
+  const rows = [["1 bar (4 beats)", beat * 4], ["1/2 note", beat * 2], ["1/4 note (1 beat)", beat], ["1/8 note", beat / 2], ["1/16 note (1 step)", beat / 4], ["1/32 note", beat / 8], ["Dotted 1/8", beat * 0.75], ["1/8 triplet", beat / 3]];
+  $("#tTable").innerHTML = `<tr><th>Length</th><th>Milliseconds</th><th>Hz (as a rate)</th></tr>` +
+    rows.map(([n, ms]) => `<tr><td>${n}</td><td class="mono">${ms.toFixed(1)} ms</td><td class="mono">${(1000 / ms).toFixed(2)} Hz</td></tr>`).join("") +
+    `<tr><td>16 bars</td><td class="mono">${(beat * 64 / 1000).toFixed(2)} s</td><td></td></tr><tr><td>32 bars</td><td class="mono">${(beat * 128 / 1000).toFixed(2)} s</td><td></td></tr>`;
+}
+function renderRemix() {
+  const o = num($("#rOrig").value), t = num($("#rTarget").value);
+  if (!(o > 0 && t > 0)) { $("#rOut").innerHTML = "<p>Enter both tempos.</p>"; return; }
+  const semis = r => 12 * Math.log2(r);
+  const pct = r => ((r - 1) * 100);
+  const sign = x => (x >= 0 ? "+" : "") + x.toFixed(1);
+  const opts = [
+    { name: `Straight to ${t} BPM`, r: t / o, note: "one original beat = one of your beats" },
+    { name: `Half-time: ${(t / 2).toFixed(1)} BPM`, r: (t / 2) / o, note: "one original beat = two of your beats" }
+  ];
+  if (o * 2 <= t * 1.3) opts.push({ name: `Quarter-time: ${(t / 4).toFixed(1)} BPM`, r: (t / 4) / o, note: "one original beat = four of yours" });
+  const best = opts.reduce((a, b) => Math.abs(Math.log(b.r)) < Math.abs(Math.log(a.r)) ? b : a);
+  $("#rOut").innerHTML = opts.map(x => `<p><b>${x.name}</b> (${x.note}): speed ${sign(pct(x.r))}%. Time-stretch keeps the pitch; resampling would shift it ${sign(semis(x.r))} semitones.${x === best ? ' <span style="color:var(--good);font-weight:700">Smallest change</span>' : ""}</p>`).join("") +
+    (Math.abs(best.r - 1) < 0.005 ? `<p style="color:var(--good)">No stretching needed: the tempos already line up.</p>` : `<p style="color:var(--muted)">Smaller changes usually mean fewer stretching artefacts. A resample of exactly ±12 semitones keeps the key.</p>`);
+}
+function renderNotes() {
+  const rows = [];
+  for (let m = 24; m <= 47; m++) rows.push(`<tr data-midi="${m}" class="${m >= 28 && m <= 35 ? "hot" : ""}"><td>${noteName(m)}</td><td class="mono">${midiHz(m).toFixed(2)} Hz</td><td class="mono">${m}</td><td>${m >= 28 && m <= 35 ? "common kick tail range" : ""}</td></tr>`);
+  $("#nTable").innerHTML = `<tr><th>Note</th><th>Frequency</th><th>MIDI</th><th></th></tr>` + rows.join("");
+  $$("#nTable tr[data-midi]").forEach(tr => tr.onclick = () => {
+    const m = +tr.dataset.midi; LAB.note = Math.min(40, Math.max(24, m)); LAB.pitch = midiHz(LAB.note);
+    syncKnobs(); kickChanged(false); playSpec({ type: "kick", p: Object.assign({}, LAB, { note: m, pitch: midiHz(m) }) });
+    if (m > 40) toast("Kick Lab goes up to E2; the tail was set to E2.");
+    else toast(`Kick Lab tail set to ${noteName(m)}.`);
+  });
+}
+
+/* =====================================================================
+   GLOSSARY
+   ===================================================================== */
+function renderGloss() {
+  const q = $("#gSearch").value.trim().toLowerCase();
+  const list = GLOSSARY.filter(([t, d]) => !q || t.toLowerCase().includes(q) || d.toLowerCase().includes(q));
+  $("#gList").innerHTML = list.length ? list.map(([t, d]) => `<div class="term"><dt>${t}</dt><dd>${d}</dd></div>`).join("") : `<p class="lead">No term matches “${q.replace(/</g, "&lt;")}”.</p>`;
+}
+
+/* =====================================================================
+   NAV + WIRING
+   ===================================================================== */
+const VIEWS = ["learn", "labs", "tools", "glossary"];
+function showView(v) {
+  if (!VIEWS.includes(v)) v = "learn";
+  VIEWS.forEach(n => { $("#view-" + n).hidden = n !== v; });
+  $$(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.view === v)));
+  if (v === "labs") drawKick();
+  if (Seq.playing && v !== "labs") Seq.stop();
+}
+$$(".tab").forEach(t => t.onclick = () => { if (location.hash !== "#" + t.dataset.view) location.hash = t.dataset.view; else showView(t.dataset.view); });
+window.addEventListener("hashchange", () => showView(location.hash.slice(1)));
+
+$("#lsMain").onclick = mainAction;
+$("#lsClose").onclick = closeLesson;
+document.addEventListener("keydown", e => {
+  if ($("#lesson").hidden || !L) return;
+  if (e.key === "Escape") { closeLesson(); return; }
+  if (e.key === "Enter" && e.target.tagName !== "BUTTON") { e.preventDefault(); if (!$("#lsMain").disabled) mainAction(); return; }
+  if (/^[1-9]$/.test(e.key) && L.state === "answer" && L.R && L.R.key) L.R.key(+e.key);
+});
+$("#continueBtn").onclick = () => { const i = currentIndex(); if (i === -1) startPractice(); else startLesson(ALL_LESSONS[i]); };
+$("#goalSel").value = String(S.goal);
+$("#goalSel").onchange = e => { S.goal = +e.target.value; save(); renderStats(); };
+$("#volRange").value = Math.round(S.vol * 100); A.vol = S.vol;
+$("#volRange").oninput = e => { S.vol = e.target.value / 100; A.setVol(S.vol); save(); };
+$("#exploreChk").checked = S.explore;
+$("#exploreChk").onchange = e => { S.explore = e.target.checked; save(); renderPath(); };
+$("#heartsChk").checked = S.unlimited;
+$("#heartsChk").onchange = e => { S.unlimited = e.target.checked; save(); renderStats(); };
+$("#resetBtn").onclick = () => { const y = $("#resetYes"); y.hidden = !y.hidden; $("#resetBtn").textContent = y.hidden ? "Reset" : "Cancel"; };
+$("#resetYes").onclick = () => { const vol = S.vol; S = defaults(); S.vol = vol; save(); LAB = kickParams(KICK_PRESETS.Frenchcore); LAB.bpm = 200; syncKnobs(); kickChanged(false); $("#resetYes").hidden = true; $("#resetBtn").textContent = "Reset"; $("#exploreChk").checked = false; $("#heartsChk").checked = false; $("#goalSel").value = "30"; renderPath(); renderStats(); toast("Progress erased."); };
+["tBpm"].forEach(id => $("#" + id).addEventListener("input", renderTempo));
+["rOrig", "rTarget"].forEach(id => $("#" + id).addEventListener("input", renderRemix));
+$("#gSearch").addEventListener("input", renderGloss);
+setInterval(() => { if ($("#lesson").hidden) renderStats(); }, 60000);
+
+initKickLab(); initBeatLab(); renderTempo(); renderRemix(); renderNotes(); renderGloss();
+renderPath(); renderStats();
+showView(location.hash.slice(1) || "learn");
+</script>
+</body>
+</html>
